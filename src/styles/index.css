@@ -1,0 +1,149 @@
+@import url("https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap");
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Plus Jakarta Sans", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  line-height: normal;
+  font-family: inherit;
+  margin: unset;
+}
+
+a {
+  display: block;
+}
+
+ul {
+  margin: 0;
+  margin-inline: 0 !important;
+  padding: 0;
+  list-style: none;
+}
+
+.ReactModal__Overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+  background: transparent;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #6b6b6b;
+  border-radius: 10px;
+}
+input {
+  background-color: transparent;
+  width: 100%;
+}
+input:focus {
+  outline: none;
+}
+.alice-carousel__dots-item {
+  cursor: pointer;
+}
+
+.alice-carousel__wrapper {
+  min-height: 400px; /* Set this to an appropriate height based on your content */
+}
+
+.swal2-container {
+  z-index: 20000 !important;
+}
+/* input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus, */
+.autofillfoc:-webkit-autofill:focus {
+  -webkit-text-fill-color: black;
+  -webkit-box-shadow: 0 0 0px 1000px #00000000 inset;
+  box-shadow: 0 0 0px 1000px #00000000 inset;
+  transition: background-color 5000s ease-in-out 0s;
+  background-color: transparent;
+}
+
+/* swiper part */
+
+.swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.swiper-slide {
+  text-align: center;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+}
+
+.swiper-slide img {
+  display: block;
+}
+
+.attch-img {
+  background-image: linear-gradient(
+      rgba(0, 0, 0, 0.4),
+      rgba(0, 0, 0, 0.4)
+    ),
+    url(/images/education.webp);
+  background-attachment: fixed;
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.card-img-atch {
+  background-image: url(/images/img_rectangle_42.png);
+  background-attachment: fixed;
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.ruby-disp {
+  display: ruby;
+}
+
+.blur {
+  filter: blur(20px);
+  transition: filter 0.3s ease-out;
+}
+
+.loaded {
+  filter: blur(0);
+}
+
+.swal-my-icon {
+    font-size: 10px
+}
+
+.swal-txt {
+  font-size: 22px;
+}
+
+.ReactFlagsSelect-module_selectBtn__19wW7 {
+  color: white !important; /* Change text color to white */
+  background: transparent !important; /* Ensure background remains transparent */
+  border: none !important;
+  font-size: 14px !important;
+}
+
+/* Apply white color to the selected value */
+.react-flags-select .selectedLabel {
+  color: white;
+}

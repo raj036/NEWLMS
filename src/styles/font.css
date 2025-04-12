@@ -1,0 +1,102 @@
+/* Plus Jakarta Sans */
+@font-face {
+  font-display: swap;
+  font-style: normal;
+  font-family: "Plus Jakarta Sans";
+  src: url("/fonts/PlusJakartaSansRomanRegular.ttf") format("truetype");
+  font-weight: 400;
+}
+@font-face {
+  font-display: swap;
+  font-style: normal;
+  font-family: "Plus Jakarta Sans";
+  src: url("/fonts/PlusJakartaSansRomanMedium.ttf") format("truetype");
+  font-weight: 500;
+}
+@font-face {
+  font-display: swap;
+  font-style: normal;
+  font-family: "Plus Jakarta Sans";
+  src: url("/fonts/PlusJakartaSansRomanSemiBold.ttf") format("truetype");
+  font-weight: 600;
+}
+@font-face {
+  font-display: swap;
+  font-style: normal;
+  font-family: "Plus Jakarta Sans";
+  src: url("/fonts/PlusJakartaSansRomanBold.ttf") format("truetype");
+  font-weight: 700;
+}
+
+/* Oswald */
+@font-face {
+  font-display: swap;
+  font-style: normal;
+  font-family: "Oswald";
+  src: url("/fonts/OswaldMedium.ttf") format("truetype");
+  font-weight: 500;
+}
+
+/* Raleway */
+@font-face {
+  font-display: swap;
+  font-style: normal;
+  font-family: "Raleway";
+  src: url("/fonts/RalewayMedium.ttf") format("truetype");
+  font-weight: 500;
+}
+
+/* Inter */
+@font-face {
+  font-display: swap;
+  font-style: normal;
+  font-family: "Inter";
+  src: url("/fonts/InterRegular.ttf") format("truetype");
+  font-weight: 400;
+}
+@font-face {
+  font-display: swap;
+  font-style: normal;
+  font-family: "Inter";
+  src: url("/fonts/InterMedium.ttf") format("truetype");
+  font-weight: 500;
+}
+@font-face {
+  font-display: swap;
+  font-style: normal;
+  font-family: "Inter";
+  src: url("/fonts/InterSemiBold.ttf") format("truetype");
+  font-weight: 600;
+}
+@font-face {
+  font-display: swap;
+  font-style: normal;
+  font-family: "Inter";
+  src: url("/fonts/InterBold.ttf") format("truetype");
+  font-weight: 700;
+}
+
+/* Montserrat */
+@font-face {
+  font-display: swap;
+  font-style: normal;
+  font-family: "Montserrat";
+  src: url("/fonts/MontserratRegular.ttf") format("truetype");
+  font-weight: 400;
+}
+@font-face {
+  font-display: swap;
+  font-style: normal;
+  font-family: "Montserrat";
+  src: url("/fonts/MontserratBold.ttf") format("truetype");
+  font-weight: 700;
+}
+
+/* Poppins */
+@font-face {
+  font-display: swap;
+  font-style: normal;
+  font-family: "Poppins";
+  src: url("/fonts/PoppinsBold.ttf") format("truetype");
+  font-weight: 700;
+}
