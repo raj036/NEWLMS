@@ -129,7 +129,7 @@ export default function HomePage() {
 
       <div className="relative flex flex-col items-center justify-between w-full pt-[25px] bg-white-A700">
         <div className="fixed right-4 bottom-4 z-50">
-          <a href="https://ai.neovis.co.in/ilate_chatbot/">
+          <a href="https://api.maitriai.com/ilate_chatbot/">
             <img src={Chat} alt="chat icon" className="w-[60px] h-[60px] transform transition-transform duration-300 hover:scale-110"/>
           </a>
         </div>
