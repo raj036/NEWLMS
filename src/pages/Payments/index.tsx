@@ -8,8 +8,7 @@ import FormatPrice from "helper/FormatPrice";
 import Swal from "sweetalert2";
 import axios from "helper/axios";
 import { Link, useNavigate } from "react-router-dom";
-import html2pdf from "html2pdf.js";
-import { useRef } from "react";
+
 interface InstallmentData {
   installment_number: number;
   amount_due: number;
@@ -125,103 +124,6 @@ const Payments = () => {
     }
   };
 
-  // Make sure this ref is properly defined
-  const pdfRef = React.useRef(null);
-
-  // Add this function to handle PDF generation
-  const generatePaymentSummaryPDF = (paymentID) => {
-    const element = pdfRef.current;
-
-    if (!element) return;
-
-    // Clone the element to modify it for PDF
-    const pdfContent = element.cloneNode(true);
-
-    // Replace external SVG with blue text for Razorpay logo
-    const svgImages = pdfContent.querySelectorAll(
-      'img[src*="razorpay-logo.svg"]'
-    );
-
-    if (svgImages.length > 0) {
-      svgImages.forEach((img) => {
-        const textLogo = document.createElement("span");
-        textLogo.textContent = "Razorpay";
-        textLogo.style.color = "#0066FF"; // Blue color
-        textLogo.style.fontWeight = "bold";
-        textLogo.style.fontSize = "18px";
-        textLogo.style.fontFamily = "Arial, sans-serif";
-        img.parentNode.replaceChild(textLogo, img);
-      });
-    }
-
-    const dueNowElements = pdfContent.querySelectorAll("*");
-    dueNowElements.forEach((element) => {
-      if (element.textContent && element.textContent.includes("Due now")) {
-        element.textContent = element.textContent.replace(
-          "Due now",
-          "Paid now"
-        );
-      }
-
-      // Also check for attributes like title, aria-label, etc.
-      if (element.hasAttributes()) {
-        const attributes = element.attributes;
-        for (let i = 0; i < attributes.length; i++) {
-          if (attributes[i].value && attributes[i].value.includes("Due now")) {
-            attributes[i].value = attributes[i].value.replace(
-              "Due now",
-              "Paid now"
-            );
-          }
-        }
-      }
-    });
-
-    // Add a title to the PDF
-    const titleElement = document.createElement("h1");
-    titleElement.textContent = "ILATE - Payment Receipt";
-    titleElement.style.textAlign = "center";
-    titleElement.style.marginBottom = "20px";
-    titleElement.style.color = "#7066E0";
-    pdfContent.prepend(titleElement);
-
-    // Add transaction details
-    const transactionDiv = document.createElement("div");
-    transactionDiv.innerHTML = `
-    <div style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
-      <p><strong>Transaction Date:</strong> ${new Date().toLocaleDateString()}</p>
-      <p><strong>Transaction ID:</strong> ${paymentID} 
-      <p><strong>Student Name:</strong> ${user.user_name}</p>
-      <p><strong>Email:</strong> ${user.email_id}</p>
-      <p><strong>Phone:</strong> ${user.phone_no}</p>
-    </div>
-  `;
-    pdfContent.prepend(transactionDiv);
-
-    // Add a thank you message at the bottom
-    const thankYouElement = document.createElement("div");
-    thankYouElement.innerHTML = `
-    <div style="margin-top: 30px; text-align: center; color: #333;">
-      <p>Thank you for enrolling with ILATE!</p>
-      <p>For any queries, please contact support@ilate.com</p>
-    </div>
-  `;
-    pdfContent.appendChild(thankYouElement);
-
-    // PDF generation options
-    const opt = {
-      margin: [10, 10, 10, 10],
-      filename: `ILATE_Payment_Receipt_${
-        new Date().toISOString().split("T")[0]
-      }.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-    };
-
-    // Generate PDF
-    html2pdf().from(pdfContent).set(opt).save();
-  };
   const getFees = async () => {
     try {
       setLoading(true);
@@ -492,6 +394,7 @@ const Payments = () => {
   const verifyPayment = async (paymentData) => {
     try {
       setLoading(true);
+      const installmentsToSend = calculateInstallments();
       const verificationData = {
         razorpay_order_id: paymentData.razorpay_order_id,
         razorpay_payment_id: paymentData.razorpay_payment_id,
@@ -504,6 +407,7 @@ const Payments = () => {
         years: years,
         amount: finalAmount,
         referral_code: isReferralValid ? referralCode : null,
+        installments_data: installmentsData,
       };
 
       const response = await axios.post(
@@ -520,11 +424,10 @@ const Payments = () => {
       setLoading(false);
 
       if (response.data.status === "success") {
-        // generatePaymentSummaryPDF(verificationData.razorpay_payment_id);
         Swal.fire({
           icon: "success",
           title: "Payment Successful!",
-          text: "Thank you for enrolling with ILATE",
+          text: "Thank you for enrolling with ILATE. Your payment has been received successfully. Your application is under verification. Please wait for further confirmation.",
           confirmButtonColor: "#7066E0",
           customClass: {
             icon: "swal-my-icon",
@@ -618,12 +521,12 @@ const Payments = () => {
       </Helmet>
       <section className="container mx-auto my-10">
         <div className="grid grid-cols-2 sm:grid-cols-1">
-          <div className="py-8 px-4 lg:py-16 md:col-span-1">
+          <div className="px-4 py-8 lg:py-16 md:col-span-1">
             <div className="mb-5">
               <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white">
                 Payment
               </h1>
-              <p className="text-gray-500 mt-2">
+              <p className="mt-2 text-gray-500">
                 Some Data Has Been Taken From Admission Form You Have Submitted
               </p>
             </div>
@@ -632,7 +535,7 @@ const Payments = () => {
                 <img
                   loading="lazy"
                   src={profileImg}
-                  className="w-28 h-28 rounded-full border"
+                  className="border rounded-full w-28 h-28"
                   alt="Profile"
                 />
               </div>
@@ -643,7 +546,7 @@ const Payments = () => {
               </div>
             </div>
             <div>
-              <h2 className="text-xl font-bold mb-3">
+              <h2 className="mb-3 text-xl font-bold">
                 You Have Enrolled for Below Criterias
               </h2>
               <p className="my-2">
@@ -659,14 +562,14 @@ const Payments = () => {
                 Modules : <strong>{courseData.module}</strong>
               </p>
             </div>
-            <h2 className="text-xl font-bold mt-4 mb-2">
+            <h2 className="mt-4 mb-2 text-xl font-bold">
               Kindly Fill Below Details
             </h2>
             <form onSubmit={handleFees}>
-              <div className="flex justify-start items-center">
+              <div className="flex items-center justify-start">
                 <Heading
                   size="s"
-                  className="w-full max-w-max mr-4 text-sm font-medium text-gray-900 dark:text-white-A700"
+                  className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
                 >
                   Batch Size<span className="text-red-500">*</span>
                 </Heading>
@@ -702,10 +605,10 @@ const Payments = () => {
                   )}
                 </select>
               </div>
-              <div className="flex justify-start items-center my-5">
+              <div className="flex items-center justify-start my-5">
                 <Heading
                   size="s"
-                  className="mr-4 w-full max-w-max text-sm font-medium text-gray-900 dark:text-white-A700"
+                  className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
                 >
                   Number of Years
                   <span className="text-red-500">*</span>
@@ -746,21 +649,21 @@ const Payments = () => {
             </form>
             {amount !== 0 && feesAmoutCh && batchSize !== 0 && years !== 0 && (
               <>
-                <h2 className="text-xl font-bold my-2">
+                <h2 className="my-2 text-xl font-bold">
                   Fees Amount :{" "}
                   <span className="text-2xl">
                     <FormatPrice price={amount ? amount : 0} />
                   </span>
-                  <p className="text-xs text-gray-500 font-medium">
+                  <p className="text-xs font-medium text-gray-500">
                     Fees Has Been Calculated Based on the Criteria and Batch
                     Size You've Selected
                   </p>
                 </h2>
 
-                <div className="flex max-w-6xl justify-start items-center my-5">
+                <div className="flex items-center justify-start max-w-6xl my-5">
                   <Heading
                     size="s"
-                    className="w-full max-w-max mr-4 text-sm font-medium text-gray-900 dark:text-white-A700"
+                    className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
                   >
                     Referral Code (Optional)
                   </Heading>
@@ -782,7 +685,7 @@ const Payments = () => {
                     />
                     <Button
                       variant="ilate"
-                      className="rounded-r-md rounded-l-none"
+                      className="rounded-l-none rounded-r-md"
                       type="button"
                       onClick={checkReferralCode}
                       disabled={!referralCode || loading}
@@ -793,14 +696,14 @@ const Payments = () => {
                 </div>
 
                 {discountAmount > 0 && (
-                  <div className="my-2 p-3 bg-green-50 border border-green-300 rounded-md">
+                  <div className="p-3 my-2 border border-green-300 rounded-md bg-green-50">
                     <p className="text-green-800">
                       Discount Applied:{" "}
                       <strong>
                         <FormatPrice price={discountAmount} />
                       </strong>
                     </p>
-                    <p className="text-green-800 font-bold">
+                    <p className="font-bold text-green-800">
                       Final Amount:{" "}
                       <FormatPrice price={finalAmount - discountAmount} />
                     </p>
@@ -812,10 +715,10 @@ const Payments = () => {
                   </div>
                 )}
 
-                <div className="flex max-w-6xl justify-start items-center my-5">
+                <div className="flex items-center justify-start max-w-6xl my-5">
                   <Heading
                     size="s"
-                    className="w-full max-w-max mr-4 text-sm font-medium text-gray-900 dark:text-white-A700"
+                    className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
                   >
                     Installments
                   </Heading>
@@ -832,7 +735,7 @@ const Payments = () => {
                   </select>
                 </div>
 
-                <div className="my-4 flex">
+                <div className="flex my-4">
                   <label className="flex items-center mx-2">
                     <input
                       type="radio"
@@ -872,12 +775,12 @@ const Payments = () => {
 
             {batchSize !== 0 && paymentMode === "online" ? (
               <>
-                <div className="my-5 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <div className="p-4 my-5 border border-blue-200 rounded-md bg-blue-50">
                   <div className="mt-4 text-sm text-gray-600">
-                    <h4 className="font-semibold mb-1">
+                    <h4 className="mb-1 font-semibold">
                       Terms and Conditions:
                     </h4>
-                    <ul className="list-disc pl-5 space-y-1">
+                    <ul className="pl-5 space-y-1 list-disc">
                       <li>
                         Payments are processed through Razorpay's secure
                         gateway.
@@ -917,10 +820,10 @@ const Payments = () => {
                     </div>
                   )}
                 </div>
-                <div className="flex max-w-6xl justify-start items-center my-5">
+                <div className="flex items-center justify-start max-w-6xl my-5">
                   <Heading
                     size="s"
-                    className="w-full max-w-max mr-4 text-sm font-medium text-gray-900 dark:text-white-A700"
+                    className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
                   >
                     Other Information (Optional)
                   </Heading>
@@ -952,7 +855,7 @@ const Payments = () => {
               batchSize !== 0 &&
               paymentMode === "offline" && (
                 <>
-                  <div className="border border-black-900 rounded-md p-4">
+                  <div className="p-4 border rounded-md border-black-900">
                     <div className="text-center">
                       <h2 className="text-xl font-bold">
                         Pay Via Bank Transfer
@@ -961,61 +864,61 @@ const Payments = () => {
                         Enter bank details as follows & pay
                       </p>
                     </div>
-                    <table className="table-fixed border border-black-900 w-full h-full mt-4">
+                    <table className="w-full h-full mt-4 border table-fixed border-black-900">
                       <tbody>
                         <tr>
-                          <td className="border border-black-900 p-2 font-bold">
+                          <td className="p-2 font-bold border border-black-900">
                             Account Name
                           </td>
-                          <td className="border border-black-900 p-2">ILATE</td>
+                          <td className="p-2 border border-black-900">ILATE</td>
                         </tr>
                         <tr>
-                          <td className="border border-black-900 p-2 font-bold">
+                          <td className="p-2 font-bold border border-black-900">
                             Account No.
                           </td>
-                          <td className="border border-black-900 p-2">
+                          <td className="p-2 border border-black-900">
                             50200055073020
                           </td>
                         </tr>
                         <tr>
-                          <td className="border border-black-900 p-2 font-bold">
+                          <td className="p-2 font-bold border border-black-900">
                             Bank
                           </td>
-                          <td className="border border-black-900 p-2">
+                          <td className="p-2 border border-black-900">
                             HDFC Bank
                           </td>
                         </tr>
                         <tr>
-                          <td className="border border-black-900 p-2 font-bold">
+                          <td className="p-2 font-bold border border-black-900">
                             Account Type
                           </td>
-                          <td className="border border-black-900 p-2">
+                          <td className="p-2 border border-black-900">
                             Current Account
                           </td>
                         </tr>
                         <tr>
-                          <td className="border border-black-900 p-2 font-bold">
+                          <td className="p-2 font-bold border border-black-900">
                             IFSC
                           </td>
-                          <td className="border border-black-900 p-2">
+                          <td className="p-2 border border-black-900">
                             HDFC0001946
                           </td>
                         </tr>
                         <tr>
-                          <td className="border border-black-900 p-2 font-bold">
+                          <td className="p-2 font-bold border border-black-900">
                             Branch
                           </td>
-                          <td className="border border-black-900 p-2">
+                          <td className="p-2 border border-black-900">
                             Andheri East, Mumbai
                           </td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
-                  <div className="flex max-w-6xl justify-start items-center my-5">
+                  <div className="flex items-center justify-start max-w-6xl my-5">
                     <Heading
                       size="s"
-                      className="w-full max-w-max mr-4 text-sm font-medium text-gray-900 dark:text-white-A700"
+                      className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
                     >
                       Payment Information<span className="text-red-500">*</span>
                     </Heading>
@@ -1031,10 +934,10 @@ const Payments = () => {
                       required
                     />
                   </div>
-                  <div className="flex max-w-6xl justify-start items-center my-5">
+                  <div className="flex items-center justify-start max-w-6xl my-5">
                     <Heading
                       size="s"
-                      className="w-full max-w-max mr-4 text-sm font-medium text-gray-900 dark:text-white-A700"
+                      className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
                     >
                       Other Information (Optional)
                     </Heading>
@@ -1065,122 +968,127 @@ const Payments = () => {
               )
             )}
           </div>
-          <div ref={pdfRef} className="py-8 px-4 lg:py-16 md:col-span-1">
+          <div className="px-4 py-8 lg:py-16 md:col-span-1">
             {finalAmount > 0 ? (
-              <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 sticky top-5">
-                <h2 className="text-2xl font-bold mb-4">Payment Summary</h2>
-                <div className="border-b pb-3 mb-3">
-                  <p className="flex justify-between mb-2">
-                    <span>Course:</span>
-                    <span className="font-semibold">{courseData.course}</span>
-                  </p>
-                  <p className="flex justify-between mb-2">
-                    <span>Standard:</span>
-                    <span className="font-semibold">{courseData.standard}</span>
-                  </p>
-                  <p className="flex justify-between mb-2">
-                    <span>Subject:</span>
-                    <span className="font-semibold">{courseData.subject}</span>
-                  </p>
-                  <p className="flex justify-between mb-2">
-                    <span>Module:</span>
-                    <span className="font-semibold">{courseData.module}</span>
-                  </p>
-                  <p className="flex justify-between mb-2">
-                    <span>Batch Size:</span>
-                    <span className="font-semibold">
-                      {batchData.find((b) => b.id === batchSize)?.size || ""}
-                    </span>
-                  </p>
-                  <p className="flex justify-between mb-2">
-                    <span>Duration:</span>
-                    <span className="font-semibold">
-                      {years} Year{years > 1 ? "s" : ""}
-                    </span>
-                  </p>
-                </div>
-                <div className="border-b pb-3 mb-3">
-                  <p className="flex justify-between font-semibold mb-2">
-                    <span>Total Amount:</span>
-                    <span>
-                      <FormatPrice price={amount} />
-                    </span>
-                  </p>
-                  {discountAmount > 0 && (
-                    <p className="flex justify-between text-green-600 mb-2">
-                      <span>Discount:</span>
-                      <span>
-                        - <FormatPrice price={discountAmount} />
+              <>
+                <div className="sticky p-5 border border-gray-200 rounded-lg bg-gray-50 top-5">
+                  <h2 className="mb-4 text-2xl font-bold">Payment Summary</h2>
+                  <div className="pb-3 mb-3 border-b">
+                    <p className="flex justify-between mb-2">
+                      <span>Course:</span>
+                      <span className="font-semibold">{courseData.course}</span>
+                    </p>
+                    <p className="flex justify-between mb-2">
+                      <span>Standard:</span>
+                      <span className="font-semibold">
+                        {courseData.standard}
                       </span>
                     </p>
-                  )}
-                </div>
-                <div className="pt-2">
-                  <p className="flex justify-between text-xl font-bold">
-                    <span>Final Amount:</span>
-                    <span>
-                      <FormatPrice price={finalAmount - discountAmount} />
-                    </span>
-                  </p>
-                  {installments > 1 && installmentsData.length > 0 ? (
-                    <div className="mt-3 border-t pt-3">
-                      <p className="font-semibold">Your payment schedule:</p>
-                      <br />
-                      {installmentsData.map((installment, index) => (
-                        <div
-                          key={installment.installment_number}
-                          className={`${
-                            index === 0 ? "bg-blue-50 p-2 rounded" : ""
-                          }`}
-                        >
-                          <p className="flex justify-between">
-                            <span>
-                              {index === 0 ? (
-                                <strong>Due now:</strong>
-                              ) : (
-                                `Due on ${new Date(
-                                  installment.due_date
-                                ).toLocaleDateString()}:`
-                              )}
-                            </span>
-                            <span className={index === 0 ? "font-bold" : ""}>
-                              <FormatPrice price={installment.amount_due} />
-                            </span>
-                          </p>
-                        </div>
-                      ))}
-                      {/* <p className="text-sm text-gray-600 mt-2">
+                    <p className="flex justify-between mb-2">
+                      <span>Subject:</span>
+                      <span className="font-semibold">
+                        {courseData.subject}
+                      </span>
+                    </p>
+                    <p className="flex justify-between mb-2">
+                      <span>Module:</span>
+                      <span className="font-semibold">{courseData.module}</span>
+                    </p>
+                    <p className="flex justify-between mb-2">
+                      <span>Batch Size:</span>
+                      <span className="font-semibold">
+                        {batchData.find((b) => b.id === batchSize)?.size || ""}
+                      </span>
+                    </p>
+                    <p className="flex justify-between mb-2">
+                      <span>Duration:</span>
+                      <span className="font-semibold">
+                        {years} Year{years > 1 ? "s" : ""}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="pb-3 mb-3 border-b">
+                    <p className="flex justify-between mb-2 font-semibold">
+                      <span>Total Amount:</span>
+                      <span>
+                        <FormatPrice price={amount} />
+                      </span>
+                    </p>
+                    {discountAmount > 0 && (
+                      <p className="flex justify-between mb-2 text-green-600">
+                        <span>Discount:</span>
+                        <span>
+                          - <FormatPrice price={discountAmount} />
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                  <div className="pt-2">
+                    <p className="flex justify-between text-xl font-bold">
+                      <span>Final Amount:</span>
+                      <span>
+                        <FormatPrice price={finalAmount - discountAmount} />
+                      </span>
+                    </p>
+                    {installments > 1 && installmentsData.length > 0 ? (
+                      <div className="pt-3 mt-3 border-t">
+                        <p className="font-semibold">Your payment schedule:</p>
+                        {installmentsData.map((installment, index) => (
+                          <div
+                            key={installment.installment_number}
+                            className={`${
+                              index === 0 ? "bg-blue-50 p-2 rounded" : ""
+                            }`}
+                          >
+                            <p className="flex justify-between">
+                              <span>
+                                {index === 0 ? (
+                                  <strong>Due now:</strong>
+                                ) : (
+                                  `Due on ${new Date(
+                                    installment.due_date
+                                  ).toLocaleDateString()}:`
+                                )}
+                              </span>
+                              <span className={index === 0 ? "font-bold" : ""}>
+                                <FormatPrice price={installment.amount_due} />
+                              </span>
+                            </p>
+                          </div>
+                        ))}
+                        {/* <p className="mt-2 text-sm text-gray-600">
                         {paymentMode === 'online' ? 'You will pay only the first installment now.' : 'Please mention your installment number in payment details.'}
                       </p> */}
-                    </div>
-                  ) : installments > 1 ? (
-                    <p className="text-sm text-gray-600 mt-2 text-center">
-                      {/* Payable in {installments} installments */}
-                    </p>
-                  ) : null}
-                </div>
+                      </div>
+                    ) : installments > 1 ? (
+                      <p className="mt-2 text-sm text-center text-gray-600">
+                        {/* Payable in {installments} installments */}
+                      </p>
+                    ) : null}
+                  </div>
 
-                {paymentMode === "online" && (
-                  <div className="mt-6 flex flex-col justify-center items-center space-y-3">
-                    <p className="text-sm text-center">Secured Payment By</p>
-                    <img
-                      src="https://razorpay.com/assets/razorpay-logo.svg"
-                      alt="Razorpay"
-                      className="h-8"
-                    />
+                  {paymentMode === "online" && (
+                    <div className="flex flex-col items-center justify-center mt-6 space-y-3">
+                      <p className="text-sm text-center">Secured Payment By</p>
+                      <img
+                        src="https://razorpay.com/assets/razorpay-logo.svg"
+                        alt="Razorpay"
+                        className="h-8"
+                      />
 
-                    {/* <div className="flex justify-center space-x-2">
+                      {/* <div className="flex justify-center space-x-2">
                       <img src="/assets/visa.png" alt="Visa" className="h-6" />
                       <img src="/assets/mastercard.png" alt="Mastercard" className="h-6" />
                       <img src="/assets/rupay.png" alt="RuPay" className="h-6" />
                       <img src="/assets/upi.png" alt="UPI" className="h-6" />
                     </div> */}
-                  </div>
-                )}
-              </div>
+                    </div>
+                  )}
+                </div>
+              </>
             ) : (
               <>
-                <p className="mb-5 font-bold text-lg">
+                <p className="mb-5 text-lg font-bold">
                   Payment Terms & Conditions
                 </p>
                 <ul className="flex flex-col items-start justify-center gap-4 text-sm text-gray-500">
@@ -1237,11 +1145,6 @@ const Payments = () => {
               </>
             )}
           </div>
-          {/* <Link to="/installment_payment">
-                      <button className="bg-blue-500 text-white px-4 py-2 rounded">
-                        Pay Installment
-                      </button>
-                    </Link> */}
         </div>
       </section>
     </>

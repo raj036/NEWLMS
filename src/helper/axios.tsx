@@ -14,3 +14,5 @@ export default axios.create({
     "ngrok-skip-browser-warning": true,
   },
 });
+
+// chatbot link : https://api.maitriai.com/ilate_chatbot/

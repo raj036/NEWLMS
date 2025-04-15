@@ -13,7 +13,9 @@ import {
   Mic2Icon,
   BookMarked,
   Home,
-  IndianRupeeIcon
+  IndianRupeeIcon,
+  GiftIcon,
+  ReceiptIcon
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -102,19 +104,25 @@ const AdminSidebarLayout = () => {
               active={location.pathname === "/branch"}
             />
           </Link>
-
+          <Link to={"/referralCode"}>
+            <SidebarItem
+              icon={<GiftIcon size={20} />}  // Changed Icon to GiftIcon
+              text="Referral Code"
+              active={location.pathname === "/referralCode"}
+            />
+          </Link>
+          <Link to={"/paymenthistory"}>
+            <SidebarItem
+              icon={<ReceiptIcon size={20} />}  // Updated icon
+              text="Payment History"
+              active={location.pathname === "/paymenthistory"}
+            />
+          </Link>
           <Link to={"/announcement"}>
             <SidebarItem
               icon={<Mic2Icon size={20} />}
               text="Announcement"
               active={location.pathname === "/announcement"}
-            />
-          </Link>
-          <Link to={"/paymenthistory"}>
-            <SidebarItem
-              icon={<IndianRupeeIcon size={20} />}  // Changed Icon
-              text="Pyment History"
-              active={location.pathname === "/paymenthistory"}
             />
           </Link>
         </Sidebar>

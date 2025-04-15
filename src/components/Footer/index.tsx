@@ -73,9 +73,9 @@ export default function Footer({ ...props }: Props) {
 
   return (
     <footer {...props}>
-      <div className="flex flex-row justify-center items-center w-full mx-auto">
+      <div className="flex flex-row items-center justify-center w-full mx-auto">
         <div className="flex flex-col items-center justify-center w-full">
-          <div className="flex flex-row md:flex-col justify-between items-start w-full gap-8">
+          <div className="flex flex-row items-start justify-between w-full gap-8 md:flex-col">
             <div className="flex flex-col justify-start w-[30%] md:w-[40%] sm:w-[70%] xs:w-full gap-8">
               <Img
                 src="images/footerLogo.webp"
@@ -87,9 +87,9 @@ export default function Footer({ ...props }: Props) {
               />
             </div>
             <div className="flex flex-col items-start justify-start w-[70%] md:w-full gap-10">
-              <div className="flex flex-row sm:flex-col justify-start items-start h-full">
-                <div className="flex w-full md:w-6/12 justify-around sm:w-full">
-                  <div className="flex flex-col items-start justify-start w-3/12 sm:w-full mb-8">
+              <div className="flex flex-row items-start justify-start h-full sm:flex-col">
+                <div className="flex justify-around w-full md:w-6/12 sm:w-full">
+                  <div className="flex flex-col items-start justify-start w-3/12 mb-8 sm:w-full">
                     <Heading
                       size="xl"
                       as="h6"
@@ -142,7 +142,7 @@ export default function Footer({ ...props }: Props) {
                       </li>
                     </ul>
                   </div>
-                  <div className="flex flex-col items-start justify-start w-3/12 sm:w-full mb-8">
+                  <div className="flex flex-col items-start justify-start w-3/12 mb-8 sm:w-full">
                     <Heading
                       size="xl"
                       as="h6"
@@ -208,7 +208,7 @@ export default function Footer({ ...props }: Props) {
                     </Heading>
                     <form
                       onSubmit={handleSubmit}
-                      className="w-full mt-5 xs:block grid grid-cols-2 gap-x-10 gap-y-6 text-white-A700"
+                      className="grid w-full grid-cols-2 mt-5 xs:block gap-x-10 gap-y-6 text-white-A700"
                     >
                       <div className="border-b-2">
                         <Input
@@ -308,7 +308,7 @@ export default function Footer({ ...props }: Props) {
                   Data & Security
                 </Link>{" "}
                 |{" "}
-                <Link to="terms_service" className="inline mx-1 hover:underline">
+                <Link to="/terms_service" className="inline mx-1 hover:underline">
                   Terms of Service
                 </Link>{" "}
               </Text>

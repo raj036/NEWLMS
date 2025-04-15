@@ -18,6 +18,7 @@ import FessCreate from "pages/AdminFeesCreate";
 import AdminAssignedCourses from "pages/AdminAssignedCourses";
 import AdminBranch from "pages/Adminbranches";
 import PaymentDetails from "pages/AdminPaymentHistory";
+import ReferralCodeForm from "pages/AdminReferralCode";
 
 const AdminRoutes = () => {
   const { user }: any = useAuthContext();
@@ -86,6 +87,10 @@ const AdminRoutes = () => {
     {
       path: "paymenthistory",
       element: <PaymentDetails />
+    },
+    {
+      path: "referralCode",
+      element: <ReferralCodeForm />
     }
   ];
   

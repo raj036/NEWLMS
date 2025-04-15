@@ -128,8 +128,8 @@ export default function HomePage() {
       </Helmet>
 
       <div className="relative flex flex-col items-center justify-between w-full pt-[25px] bg-white-A700">
-        <div className="fixed right-4 bottom-4 z-50">
-          <a href="https://ai.neovis.co.in/ilate_chatbot/">
+        <div className="fixed z-50 right-4 bottom-4">
+          <a href="https://api.maitriai.com/ilate_chatbot/">
             <img src={Chat} alt="chat icon" className="w-[60px] h-[60px] transform transition-transform duration-300 hover:scale-110"/>
           </a>
         </div>
@@ -223,7 +223,7 @@ export default function HomePage() {
                       setSliderState(e?.item);
                     }}
                     ref={sliderRef}
-                    className="justify-center w-full left-0 bottom-0 right-0 top-0 m-auto absolute"
+                    className="absolute top-0 bottom-0 left-0 right-0 justify-center w-full m-auto"
                     items={[...Array(3)].map(() => (
                       <React.Fragment key={Math.random()}>
                         <div className="flex sm:block flex-row justify-around items-center sm:p-[45px] xs:p-[32px] p-[85px] mx-auto bg-cyan-900 select-none">
@@ -730,7 +730,7 @@ export default function HomePage() {
                           </div>
                           <div className="flex flex-col items-center justify-start h-[243px] w-[243px] lg:h-[163px] lg:w-[163px] ml-[-51px] p-3 bg-teal-900 rounded-full">
                             <div className="h-[218px] w-[218px] lg:h-[138px] lg:w-[138px] bg-white-A700 rounded-[50%]">
-                              <div className="flex w-full h-full items-center justify-center">
+                              <div className="flex items-center justify-center w-full h-full">
                                 <Img
                                   src="images/university_offers.svg"
                                   className="w-[50%]"
@@ -760,7 +760,7 @@ export default function HomePage() {
                           </div>
                           <div className="flex flex-col items-center justify-start h-[243px] w-[243px] lg:h-[163px] lg:w-[163px] ml-[-51px] p-3 bg-teal-900 rounded-full">
                             <div className="h-[218px] w-[218px] lg:h-[138px] lg:w-[138px] bg-white-A700 rounded-[50%]">
-                              <div className="flex w-full h-full items-center justify-center">
+                              <div className="flex items-center justify-center w-full h-full">
                                 <Img
                                   src="images/alumni.svg"
                                   className="w-[50%]"
@@ -790,7 +790,7 @@ export default function HomePage() {
                           </div>
                           <div className="flex flex-col items-center justify-start h-[243px] w-[243px] lg:h-[163px] lg:w-[163px] ml-[-51px] p-3 bg-teal-900 rounded-full">
                             <div className="h-[218px] w-[218px] lg:h-[138px] lg:w-[138px] bg-white-A700 rounded-[50%]">
-                              <div className="flex w-full h-full items-center justify-center">
+                              <div className="flex items-center justify-center w-full h-full">
                                 <Img
                                   src="images/student-teacher.svg"
                                   className="w-[50%]"
@@ -823,7 +823,7 @@ export default function HomePage() {
                           </div>
                           <div className="flex flex-col items-center justify-start h-[243px] w-[243px] lg:h-[163px] lg:w-[163px] ml-[-51px] p-3 bg-teal-900 rounded-full">
                             <div className="h-[218px] w-[218px] lg:h-[138px] lg:w-[138px] bg-white-A700 rounded-[50%]">
-                              <div className="flex w-full h-full items-center justify-center">
+                              <div className="flex items-center justify-center w-full h-full">
                                 <Img
                                   src="images/Experience.svg"
                                   className="w-[50%]"
@@ -855,7 +855,7 @@ export default function HomePage() {
                             as="h2"
                             className="md:text-[27px] sm:text-[25px] !text-black-900 tracking-[1.28px] !font-poppins capitalize mb-[50px]"
                           >
-                            <span className="text-black-900 font-plusjakartasans font-normal">
+                            <span className="font-normal text-black-900 font-plusjakartasans">
                               Explore How ILATE Students
                               <br />
                             </span>
@@ -932,7 +932,7 @@ export default function HomePage() {
                 <div className="3xl:h-[800px] 3xl:mt-[8%] 2xl:h-[664px] h-[664px] sm:h-[1640px] xs:h-[1800px] md:h-[545px] md:mt-[20%] w-full 2xl:mt-[20%]  relative card-img-atch">
                   <div className="flex gap-4 absolute sm:flex-col 3xl:top-[-39%] top-[-54%] 2xl:top-[-45%] lg:top-[-29%] sm:top-[-33%] xs:top-[-28%] w-full h-full">
                     <div className="sm:w-[90%] w-[30%] right-[7%] m-auto shadow-lg -absolute sm:h-[20%] xs:h-[21%] 2xl:h-[66%] 3xl:h-[43%] lg:h-[76%] md:h-[86%] sm:mb-[-270px]">
-                      <div className="flex flex-col items-start justify-start w-full top-0 right-0 left-0 m-auto -absolute">
+                      <div className="top-0 left-0 right-0 flex flex-col items-start justify-start w-full m-auto -absolute">
                         <Img
                           src="images/img_rectangle_47.webp"
                           alt="image_seven"
@@ -966,7 +966,7 @@ export default function HomePage() {
                       </div>
                     </div>
                     <div className="sm:w-[90%] w-[30%] right-0 left-0 m-auto shadow-lg -absolute sm:h-[21%] xs:h-[23%] 2xl:h-[66%] 3xl:h-[43%] md:h-[86%] lg:h-[76%] sm:mb-[-270px]">
-                      <div className="flex flex-col items-start justify-start w-full top-0 right-0 left-0 m-auto -absolute">
+                      <div className="top-0 left-0 right-0 flex flex-col items-start justify-start w-full m-auto -absolute">
                         <Img
                           src="images/img_rectangle_46.webp"
                           alt="image_seven"
@@ -1000,7 +1000,7 @@ export default function HomePage() {
                       </div>
                     </div>
                     <div className="sm:w-[90%] w-[30%] left-[8%] m-auto shadow-lg -absolute sm:h-[20%] 2xl:h-[66%] 3xl:h-[43%] xs:h-[21%] lg:h-[76%] md:h-[86%] sm:mb-[-270px]">
-                      <div className="flex flex-col items-start justify-start w-full top-0 right-0 left-0 m-auto -absolute">
+                      <div className="top-0 left-0 right-0 flex flex-col items-start justify-start w-full m-auto -absolute">
                         <Img
                           src="images/img_rectangle_45.webp"
                           alt="image_seven"
@@ -1119,7 +1119,7 @@ export default function HomePage() {
                                                   onClick={() =>
                                                     toggleShowMore(index)
                                                   }
-                                                  className="font-bold ml-4 cursor-pointer"
+                                                  className="ml-4 font-bold cursor-pointer"
                                                 >
                                                   {showMoreStates[index]
                                                     ? "show less"

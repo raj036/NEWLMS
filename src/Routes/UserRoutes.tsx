@@ -77,18 +77,7 @@ const UserRoutes = () => {
       path: "/dashboard/myannouncement",
       element: user ? <StudentAnnouncements /> : <Navigate to="/login" />,
     },
-    {
-      path: "/privacy_policy",
-      element: user ? <PrivacyPolicy/> : <Navigate to="/login" />,
-    },
-    {
-      path: "/data_security",
-      element: user ? <DataSecurity/> : <Navigate to="/login" />,
-    },
-    {
-      path: "/terms_service",
-      element: user ? <TermsOfService/> : <Navigate to="/login" />,
-    },
+   
     {
       path: "/dashboard/installment_payment",
       element: user ? <InstallmentManagement/> : <Navigate to="/login" />,
@@ -105,6 +94,18 @@ const UserRoutes = () => {
     {
       path: "login",
       element: !user ? <LoginPage /> : <Navigate to={"/"} />,
+    },
+    {
+      path: "/privacy_policy",
+      element: <PrivacyPolicy/>  ,
+    },
+    {
+      path: "/data_security",
+      element: <DataSecurity/>,
+    },
+    {
+      path: "/terms_service",
+      element: <TermsOfService/>,
     },
     {
       path: "signup",
