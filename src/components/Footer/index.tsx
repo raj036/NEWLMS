@@ -301,7 +301,7 @@ export default function Footer({ ...props }: Props) {
             <div className="flex flex-row justify-between items-center w-auto gap-[90px]">
               <Text size="s" as="p" className="!font-raleway sm:text-[12px]">
                 <Link to="/privacy_policy" className="inline mx-1 hover:underline">
-                  Privacy Policy
+                  Privacy & Refund Policy
                 </Link>{" "}
                 |{" "}
                 <Link to="/data_security" className="inline mx-1 hover:underline">

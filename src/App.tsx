@@ -10,6 +10,7 @@ import TeacherLayout from "Layout/TeacherLayout";
 import TeacherRoutes from "Routes/TeacherRoutes";
 import ParentLayout from "Layout/ParentLayout";
 import ParentRoutes from "Routes/ParentRoutes";
+import ScrollToTop from "components/ScrollTop";
 
 function App() {
   const { user }: any = useAuthContext();
@@ -21,6 +22,7 @@ function App() {
   return (
     <>
       <Router>
+        <ScrollToTop />
         {user && user.user_type === "admin" ? (
           <AdminLayout>
             <AdminRoutes />

@@ -266,7 +266,7 @@ const FessCreate = () => {
     const handleEditSubmit = async (e: any) => {
         e.preventDefault();
         try {
-            await axios.put(`/api/fees/update_fees/${editFormData.fee_id}/`, editFormData, {
+            await axios.put(`/api/fees/update_fees/${editFormData.fee_id}`, editFormData, {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${user.token}`,
@@ -398,7 +398,7 @@ const FessCreate = () => {
             // Open the edit dialog
             setTimeout(() => {
                 setIsEditDialogue(true);
-            },1000)
+            },500)
         } catch (error) {
             console.error("Error setting up edit form:", error);
             Swal.fire({
@@ -424,9 +424,9 @@ const FessCreate = () => {
                 </button>
 
                 {isModalOpen && (
-                    <div className="fixed inset-0 flex items-center justify-center z-50 opacity-1 bg-black bg-opacity-50 backdrop-blur-sm">
-                        <div className="bg-white p-6 rounded-md shadow-lg w-1/2 z-50">
-                            <h2 className="text-lg font-bold mb-4">Create Batch</h2>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 opacity-1 backdrop-blur-sm">
+                        <div className="z-50 w-1/2 p-6 bg-white rounded-md shadow-lg">
+                            <h2 className="mb-4 text-lg font-bold">Create Batch</h2>
                             <form onSubmit={handleSubmit1}>
                                 <div className="mb-4">
                                     <Label htmlFor="batch_size">Batch Size</Label>
@@ -472,7 +472,7 @@ const FessCreate = () => {
                     <DialogContent className="overflow-scroll">
                         <DialogHeader>Add fees here</DialogHeader>
                         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="course_id" className="text-right">
                                     Course
                                 </Label>
@@ -491,7 +491,7 @@ const FessCreate = () => {
                                     ))}
                                 </select>
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="standard_id" className="text-right">
                                     Standard
                                 </Label>
@@ -510,7 +510,7 @@ const FessCreate = () => {
                                     ))}
                                 </select>
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="subject_id" className="text-right">
                                     Subject
                                 </Label>
@@ -529,7 +529,7 @@ const FessCreate = () => {
                                     ))}
                                 </select>
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="module_id" className="text-right">
                                     Module
                                 </Label>
@@ -548,7 +548,7 @@ const FessCreate = () => {
                                     ))}
                                 </select>
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="batch_id" className="text-right">
                                     Batch
                                 </Label>
@@ -568,7 +568,7 @@ const FessCreate = () => {
                                 </select>
                             </div>
 
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="year" className="text-right">
                                     Year
                                 </Label>
@@ -582,7 +582,7 @@ const FessCreate = () => {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="amount" className="text-right">
                                     Amount
                                 </Label>
@@ -610,7 +610,7 @@ const FessCreate = () => {
                             <DialogTitle>Edit Fee</DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleEditSubmit} className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="edit_course_id" className="text-right">
                                     Course
                                 </Label>
@@ -630,7 +630,7 @@ const FessCreate = () => {
                                 </select>
                             </div>
 
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="edit_standard_id" className="text-right">
                                     Standard
                                 </Label>
@@ -650,7 +650,7 @@ const FessCreate = () => {
                                 </select>
                             </div>
 
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="edit_subject_id" className="text-right">
                                     Subject
                                 </Label>
@@ -670,7 +670,7 @@ const FessCreate = () => {
                                 </select>
                             </div>
 
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="edit_module_id" className="text-right">
                                     Module
                                 </Label>
@@ -690,7 +690,7 @@ const FessCreate = () => {
                                 </select>
                             </div>
 
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="edit_batch_id" className="text-right">
                                     Batch
                                 </Label>
@@ -710,7 +710,7 @@ const FessCreate = () => {
                                 </select>
                             </div>
 
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="edit_year" className="text-right">
                                     Year
                                 </Label>
@@ -724,7 +724,7 @@ const FessCreate = () => {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-4 items-center gap-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
                                 <Label htmlFor="edit_amount" className="text-right">
                                     Amount
                                 </Label>
@@ -775,7 +775,7 @@ const FessCreate = () => {
                                         className="bg-teal-900 hover:!bg-blue-900"
                                         size="sm"
                                     >
-                                        <Edit className="h-4 w-4 mr-1" /> Edit
+                                        <Edit className="w-4 h-4 mr-1" /> Edit
                                     </Button>
                                 </TableCell>
                             </TableRow>
