@@ -261,30 +261,48 @@ export default function ContactUsPage() {
                     Connect on Social
                   </Heading>
                   <div className="flex flex-row justify-between items-center gap-2 w-[20%] mt-[11px]">
-                    <Link to="#">
+                    <a
+                      href="https://www.facebook.com/profile.php?id=100076628799229"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <Img
                       loading="lazy"
                         src="images/img_vector_black_900_32x19.svg"
                         alt="vector_seven"
                         className="h-8"
                       />
-                    </Link>
-                    <Link to="#">
+                   </a>
+                   
+                     
+                      <a
+                      href="https://www.instagram.com/ilate.in?next=%2F"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <Img
                       loading="lazy"
                         src="images/img_vector_black_900_30x32.svg"
                         alt="vector_nine"
                         className="h-8"
                       />
-                    </Link>
-                    <Link to="#">
-                      <Img
+                    </a>
+                   
+                   <a
+                      href="https://www.youtube.com/@ilatelearningcentre"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+  <Img
                       loading="lazy"
                         src="images/img_vector_black_900_20x31.svg"
                         alt="vector_eleven"
                         className="h-6"
                       />
-                    </Link>
+
+                    </a>
+                    
+                   
                   </div>
                 </div>
               </div>

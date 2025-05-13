@@ -25,11 +25,80 @@ import axios from "helper/axios";
 import { ArrowLeft, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+interface Course {
+    course_id: number;
+    course_name: string;
+    standards: Standard[];
+}
+
+interface Standard {
+    standard_id: number;
+    standard_name: string;
+    subjects: Subject[];
+}
+
+interface Subject {
+    subject_id: number;
+    subject_name: string;
+    modules: Module[];
+}
+
+interface Module {
+    module_id: number;
+    module_name: string;
+}
+
+interface Batch {
+    id: number;
+    size: string;
+}
+
+interface Fee {
+    fee_id: number;
+    course_id: number;
+    course_name: string;
+    standard_id: number;
+    standard_name: string;
+    subject_id: number;
+    subject_name: string;
+    module_id: number;
+    module_name: string;
+    batch_id: number;
+    batch_name: string;
+    year: number;
+    amount: number;
+}
+interface InstallmentDetail {
+    id: number;
+    course_id: number;
+    number_of_installments: number;
+    total_amount: number;
+    standard_id: number;
+    year: number;
+    subject_id: number;
+    module_id: number;
+    batch_id: number;
+    installments: {
+        installment_number: number;
+        amount: number;
+        due_date: string;
+    }[];
+}
+
+interface InstallmentData {
+    installment_number: number;
+    amount: string;
+    due_date: string;
+}
+
 const FessCreate = () => {
     const { user }: any = useAuthContext();
     const [isDialogue, setIsDialogue] = useState(false);
     const [isEditDialogue, setIsEditDialogue] = useState(false);
+    const [isInstallmentDialogue, setIsInstallmentDialogue] = useState(false);
     const [years, setYears] = useState<number>(0);
+    const [selectedInstallmentDetails, setSelectedInstallmentDetails] = useState<InstallmentDetail[]>([]);
+    const [isInstallmentDetailsOpen, setIsInstallmentDetailsOpen] = useState(false);
     const [formData, setFormData] = useState({
         course_id: "",
         standard_id: "",
@@ -49,18 +118,39 @@ const FessCreate = () => {
         amount: "",
         year: "",
     });
-    const [courses, setCourses] = useState([]);
-    const [standards, setStandards] = useState([]);
-    const [subjects, setSubjects] = useState([]);
-    const [modules, setModules] = useState([]);
-    const [editStandards, setEditStandards] = useState([]);
-    const [editSubjects, setEditSubjects] = useState([]);
-    const [editModules, setEditModules] = useState([]);
-    const [batchData, setBatchData] = useState([]);
-    const [feeData, setFeeData] = useState([]);
+    const [installmentFormData, setInstallmentFormData] = useState({
+        fee_id: "",
+        course_id: "",
+        standard_id: "",
+        subject_id: "",
+        module_id: "",
+        batch_id: "",
+        branch_id: "",
+        year: "",
+        total_amount: "",
+        number_of_installments: 1,
+        installments_data: [
+            {
+                installment_number: 1,
+                amount: "",
+                due_date: ""
+            }
+        ] as InstallmentData[]
+    });
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [standards, setStandards] = useState<Standard[]>([]);
+    const [subjects, setSubjects] = useState<Subject[]>([]);
+    const [modules, setModules] = useState<Module[]>([]);
+    const [editStandards, setEditStandards] = useState<Standard[]>([]);
+    const [editSubjects, setEditSubjects] = useState<Subject[]>([]);
+    const [editModules, setEditModules] = useState<Module[]>([]);
+    const [batchData, setBatchData] = useState<Batch[]>([]);
+    const [feeData, setFeeData] = useState<Fee[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [Batch, setBatch] = useState({ size: '' });
     const navigate = useNavigate();
+    const [installmentDetails, setInstallmentDetails] = useState<InstallmentDetail[]>([]);
+    const [showInstallmentDetails, setShowInstallmentDetails] = useState<{ [key: number]: boolean }>({});
 
     useEffect(() => {
         const fetchCourses = async () => {
@@ -77,7 +167,7 @@ const FessCreate = () => {
         fetchCourses();
     }, [user.token]);
 
-    const handleInputChange = (field: any, value: any) => {
+    const handleInputChange = (field: string, value: string) => {
         setFormData((prevData) => ({
             ...prevData,
             [field]: value,
@@ -92,7 +182,7 @@ const FessCreate = () => {
         }
     };
 
-    const handleEditInputChange = (field: any, value: any) => {
+    const handleEditInputChange = (field: string, value: string) => {
         setEditFormData((prevData) => ({
             ...prevData,
             [field]: value,
@@ -107,14 +197,13 @@ const FessCreate = () => {
         }
     };
 
-    const handleCourseChange = (courseId) => {
+    const handleCourseChange = (courseId: string) => {
         const selectedCourse = courses.find((c) => c.course_id.toString() === courseId);
         if (selectedCourse) {
             setStandards(selectedCourse.standards || []);
             setSubjects([]);
             setModules([]);
-            
-            // Reset dependent fields
+
             setFormData(prev => ({
                 ...prev,
                 standard_id: "",
@@ -125,14 +214,13 @@ const FessCreate = () => {
         }
     };
 
-    const handleEditCourseChange = (courseId) => {
+    const handleEditCourseChange = (courseId: string) => {
         const selectedCourse = courses.find((c) => c.course_id.toString() === courseId);
         if (selectedCourse) {
             setEditStandards(selectedCourse.standards || []);
             setEditSubjects([]);
             setEditModules([]);
-            
-            // Reset dependent fields
+
             setEditFormData(prev => ({
                 ...prev,
                 standard_id: "",
@@ -143,13 +231,12 @@ const FessCreate = () => {
         }
     };
 
-    const handleStandardChange = (standardId) => {
+    const handleStandardChange = (standardId: string) => {
         const selectedStandard = standards.find((s) => s.standard_id.toString() === standardId);
         if (selectedStandard) {
             setSubjects(selectedStandard.subjects || []);
             setModules([]);
-            
-            // Reset dependent fields
+
             setFormData(prev => ({
                 ...prev,
                 subject_id: "",
@@ -159,13 +246,12 @@ const FessCreate = () => {
         }
     };
 
-    const handleEditStandardChange = (standardId) => {
+    const handleEditStandardChange = (standardId: string) => {
         const selectedStandard = editStandards.find((s) => s.standard_id.toString() === standardId);
         if (selectedStandard) {
             setEditSubjects(selectedStandard.subjects || []);
             setEditModules([]);
-            
-            // Reset dependent fields
+
             setEditFormData(prev => ({
                 ...prev,
                 subject_id: "",
@@ -175,12 +261,11 @@ const FessCreate = () => {
         }
     };
 
-    const handleSubjectChange = (subjectId) => {
+    const handleSubjectChange = (subjectId: string) => {
         const selectedSubject = subjects.find((s) => s.subject_id.toString() === subjectId);
         if (selectedSubject) {
             setModules(selectedSubject.modules || []);
-            
-            // Update form data
+
             setFormData(prev => ({
                 ...prev,
                 module_id: "",
@@ -189,12 +274,11 @@ const FessCreate = () => {
         }
     };
 
-    const handleEditSubjectChange = (subjectId) => {
+    const handleEditSubjectChange = (subjectId: string) => {
         const selectedSubject = editSubjects.find((s) => s.subject_id.toString() === subjectId);
         if (selectedSubject) {
             setEditModules(selectedSubject.modules || []);
-            
-            // Update form data
+
             setEditFormData(prev => ({
                 ...prev,
                 module_id: "",
@@ -218,7 +302,7 @@ const FessCreate = () => {
         fetchBatches();
     }, [user.token]);
 
-    const handleSubmit = async (e: any) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             await axios.post("/api/fees/create_fees/", formData, {
@@ -248,7 +332,7 @@ const FessCreate = () => {
                 year: years,
             });
             fetchFees();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error creating fee:", error);
             Swal.fire({
                 icon: "error",
@@ -263,7 +347,7 @@ const FessCreate = () => {
         }
     };
 
-    const handleEditSubmit = async (e: any) => {
+    const handleEditSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             await axios.put(`/api/fees/update_fees/${editFormData.fee_id}`, editFormData, {
@@ -284,7 +368,7 @@ const FessCreate = () => {
             });
             setIsEditDialogue(false);
             fetchFees();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error updating fee:", error);
             Swal.fire({
                 icon: "error",
@@ -305,6 +389,30 @@ const FessCreate = () => {
                 headers: { Authorization: `Bearer ${user.token}` },
             });
             setFeeData(response.data);
+
+            // Fetch installment details for each fee
+            const installmentPromises = response.data.map(async (fee: Fee) => {
+                try {
+                    const installmentResponse = await axios.get(`/api/admin_installments/bycriteria`, {
+                        params: {
+                            course_id: fee.course_id,
+                            standard_id: fee.standard_id,
+                            year: fee.year,
+                            subject_id: fee.subject_id,
+                            module_id: fee.module_id,
+                            batch_id: fee.batch_id
+                        },
+                        headers: { Authorization: `Bearer ${user.token}` },
+                    });
+                    return installmentResponse.data;
+                } catch (error) {
+                    console.error("Error fetching installment details:", error);
+                    return [];
+                }
+            });
+
+            const allInstallmentDetails = await Promise.all(installmentPromises);
+            setInstallmentDetails(allInstallmentDetails.flat());
         } catch (error) {
             console.error("Error fetching fees:", error);
         }
@@ -318,7 +426,7 @@ const FessCreate = () => {
         navigate(-1);
     };
 
-    const handleSubmit1 = async (e: any) => {
+    const handleSubmit1 = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             await axios.post('/api/batches/', Batch, {
@@ -334,7 +442,6 @@ const FessCreate = () => {
                 timer: 1500,
             });
             setIsModalOpen(false);
-            // Refresh batch data after creating new batch
             const response = await axios.get(`/api/batches/`, {
                 headers: { Authorization: `Bearer ${user.token}` },
             });
@@ -349,19 +456,43 @@ const FessCreate = () => {
         }
     };
 
-    const handleChange1 = (fieldName: string, value: any) => {
+    const fetchInstallmentDetails = async (fee: Fee) => {
+        try {
+            const response = await axios.get(`/api/admin_installments/bycriteria`, {
+                params: {
+                    course_id: fee.course_id,
+                    standard_id: fee.standard_id,
+                    year: fee.year,
+                    subject_id: fee.subject_id,
+                    module_id: fee.module_id,
+                    batch_id: fee.batch_id
+                },
+                headers: { Authorization: `Bearer ${user.token}` },
+            });
+            setInstallmentDetails(response.data);
+        } catch (error) {
+            console.error("Error fetching installment details:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error fetching installment details",
+                text: "Please try again later.",
+                showConfirmButton: false,
+                timer: 1500,
+            });
+        }
+    };
+
+    const handleChange1 = (fieldName: string, value: string) => {
         setBatch((prevData) => ({
             ...prevData,
             [fieldName]: value,
         }));
     };
 
-    // Function to handle edit action
-    const handleEdit = async (fee) => {
+    const handleEdit = async (fee: Fee) => {
         try {
-            // Set the form data with the selected fee's values
             setEditFormData({
-                fee_id: fee.fee_id,
+                fee_id: fee.fee_id.toString(),
                 course_id: fee.course_id.toString(),
                 standard_id: fee.standard_id.toString(),
                 subject_id: fee.subject_id.toString(),
@@ -371,34 +502,30 @@ const FessCreate = () => {
                 year: fee.year.toString(),
             });
 
-            // First, load the course data
             const selectedCourse = courses.find((c) => c.course_id.toString() === fee.course_id.toString());
             if (selectedCourse) {
                 setEditStandards(selectedCourse.standards || []);
-                
-                // Then load standard data
+
                 const selectedStandard = selectedCourse.standards.find(
                     (s) => s.standard_id.toString() === fee.standard_id.toString()
                 );
-                
+
                 if (selectedStandard) {
                     setEditSubjects(selectedStandard.subjects || []);
-                    
-                    // Then load subject data
+
                     const selectedSubject = selectedStandard.subjects.find(
                         (s) => s.subject_id.toString() === fee.subject_id.toString()
                     );
-                    
+
                     if (selectedSubject) {
                         setEditModules(selectedSubject.modules || []);
                     }
                 }
             }
-            
-            // Open the edit dialog
+
             setTimeout(() => {
                 setIsEditDialogue(true);
-            },500)
+            }, 500);
         } catch (error) {
             console.error("Error setting up edit form:", error);
             Swal.fire({
@@ -408,6 +535,139 @@ const FessCreate = () => {
                 showConfirmButton: false,
                 timer: 1500,
             });
+        }
+    };
+
+    const handleInstallmentSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await axios.post("/api/admin_installments/", {
+                ...installmentFormData,
+                total_amount: parseFloat(installmentFormData.total_amount),
+                number_of_installments: parseInt(installmentFormData.number_of_installments.toString()),
+                installments_data: installmentFormData.installments_data.map(installment => ({
+                    ...installment,
+                    amount: parseFloat(installment.amount)
+                }))
+            }, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${user.token}`,
+                },
+            });
+
+            Swal.fire({
+                icon: "success",
+                title: `Installments Created Successfully`,
+                customClass: {
+                    icon: "swal-my-icon",
+                },
+                showConfirmButton: false,
+                timer: 1500,
+            });
+
+            // Refresh installment details for this fee
+            const fee = feeData.find(f => f.fee_id.toString() === installmentFormData.fee_id);
+            if (fee) {
+                await fetchInstallmentDetails(fee);
+                setShowInstallmentDetails(prev => ({
+                    ...prev,
+                    [fee.fee_id]: true
+                }));
+            }
+
+            setIsInstallmentDialogue(false);
+        } catch (error: any) {
+            console.error("Error creating installments:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error creating installments.",
+                customClass: {
+                    icon: "swal-my-icon",
+                },
+                text: error?.response?.data?.message || "Please try again later.",
+                showConfirmButton: false,
+                timer: 1500,
+            });
+        }
+    };
+
+    const handleAddInstallment = () => {
+        const newInstallmentNumber = installmentFormData.installments_data.length + 1;
+        setInstallmentFormData({
+            ...installmentFormData,
+            installments_data: [
+                ...installmentFormData.installments_data,
+                {
+                    installment_number: newInstallmentNumber,
+                    amount: "",
+                    due_date: ""
+                }
+            ]
+        });
+    };
+
+    const handleRemoveInstallment = (index: number) => {
+        const updatedInstallments = installmentFormData.installments_data.filter((_, i) => i !== index)
+            .map((inst, idx) => ({ ...inst, installment_number: idx + 1 }));
+
+        setInstallmentFormData({
+            ...installmentFormData,
+            installments_data: updatedInstallments,
+            number_of_installments: updatedInstallments.length
+        });
+    };
+
+    const handleInstallmentInputChange = (index: number, field: string, value: string) => {
+        const updatedInstallments = [...installmentFormData.installments_data];
+        updatedInstallments[index] = {
+            ...updatedInstallments[index],
+            [field]: value
+        };
+
+        setInstallmentFormData({
+            ...installmentFormData,
+            installments_data: updatedInstallments
+        });
+    };
+    //fourth
+    const handleInstallmentAction = async (fee: Fee) => {
+        // Check if installments exist for this fee
+        const feeInstallments = installmentDetails.filter(detail =>
+            detail.course_id === fee.course_id &&
+            detail.standard_id === fee.standard_id &&
+            detail.year === fee.year &&
+            detail.subject_id === fee.subject_id &&
+            detail.module_id === fee.module_id &&
+            detail.batch_id === fee.batch_id
+        );
+
+        if (feeInstallments.length > 0) {
+            // Show installments in popup
+            setSelectedInstallmentDetails(feeInstallments);
+            setIsInstallmentDetailsOpen(true);
+        } else {
+            // Show create installment dialog
+            setInstallmentFormData({
+                fee_id: fee.fee_id.toString(),
+                course_id: fee.course_id.toString(),
+                standard_id: fee.standard_id.toString(),
+                subject_id: fee.subject_id.toString(),
+                module_id: fee.module_id.toString(),
+                batch_id: fee.batch_id.toString(),
+                branch_id: user.branch_id || "",
+                year: fee.year.toString(),
+                total_amount: fee.amount.toString(),
+                number_of_installments: 1,
+                installments_data: [
+                    {
+                        installment_number: 1,
+                        amount: fee.amount.toString(),
+                        due_date: ""
+                    }
+                ]
+            });
+            setIsInstallmentDialogue(true);
         }
     };
 
@@ -577,8 +837,14 @@ const FessCreate = () => {
                                     type="number"
                                     className="col-span-3"
                                     value={formData.year}
-                                    onChange={(e) => handleInputChange("year", e.target.value)}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value === "" || Number(value) >= 0) {
+                                            handleInputChange("year", value);
+                                        }
+                                    }}
                                     required
+                                    min="0"
                                 />
                             </div>
 
@@ -601,6 +867,57 @@ const FessCreate = () => {
                         </form>
                     </DialogContent>
                     <DialogFooter />
+                </Dialog>
+                {/* Installment Details Popup */}
+                <Dialog open={isInstallmentDetailsOpen} onOpenChange={setIsInstallmentDetailsOpen}>
+                    <DialogContent className="max-w-4xl overflow-y-auto max-h-[90vh]">
+                        <DialogHeader>
+                            <DialogTitle>Installment Details</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-6">
+                            {selectedInstallmentDetails.map((detail, idx) => (
+                                <div key={idx} className="border rounded-lg p-4">
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <span className="font-semibold">Total Amount: </span>
+                                            {detail.total_amount}
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold">Number of Installments: </span>
+                                            {detail.number_of_installments}
+                                        </div>
+                                    </div>
+
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Installment #</TableHead>
+                                                <TableHead>Amount</TableHead>
+                                                <TableHead>Due Date</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {detail.installments.map((inst, i) => (
+                                                <TableRow key={i}>
+                                                    <TableCell>{inst.installment_number}</TableCell>
+                                                    <TableCell>{inst.amount}</TableCell>
+                                                    <TableCell>{new Date(inst.due_date).toLocaleDateString()}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            ))}
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                onClick={() => setIsInstallmentDetailsOpen(false)}
+                                className="bg-teal-900 hover:!bg-blue-900"
+                            >
+                                Close
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
                 </Dialog>
 
                 {/* Edit Fee Dialog */}
@@ -746,6 +1063,146 @@ const FessCreate = () => {
                     </DialogContent>
                 </Dialog>
 
+                {/* Installment Dialog */}
+                <Dialog open={isInstallmentDialogue} onOpenChange={setIsInstallmentDialogue}>
+                    <DialogContent className="overflow-scroll max-h-screen">
+                        <DialogHeader>
+                            <DialogTitle>Create Installments</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={handleInstallmentSubmit} className="grid gap-4 py-4">
+                            <div className="grid items-center grid-cols-4 gap-4">
+                                <Label htmlFor="total_amount" className="text-right">
+                                    Total Amount
+                                </Label>
+                                <Input
+                                    id="total_amount"
+                                    type="number"
+                                    className="col-span-3"
+                                    value={installmentFormData.total_amount}
+                                    onChange={(e) => setInstallmentFormData({
+                                        ...installmentFormData,
+                                        total_amount: e.target.value
+                                    })}
+                                    required
+                                />
+                            </div>
+
+                            <div className="grid items-center grid-cols-4 gap-4">
+                                <Label htmlFor="number_of_installments" className="text-right">
+                                    Number of Installments
+                                </Label>
+                                <Input
+                                    id="number_of_installments"
+                                    type="number"
+                                    className="col-span-3"
+                                    value={installmentFormData.number_of_installments}
+                                    onChange={(e) => {
+                                        const count = parseInt(e.target.value) || 1;
+                                        const currentCount = installmentFormData.installments_data.length;
+
+                                        if (count > currentCount) {
+                                            const newInstallments = [...installmentFormData.installments_data];
+                                            for (let i = currentCount; i < count; i++) {
+                                                newInstallments.push({
+                                                    installment_number: i + 1,
+                                                    amount: "",
+                                                    due_date: ""
+                                                });
+                                            }
+                                            setInstallmentFormData({
+                                                ...installmentFormData,
+                                                number_of_installments: count,
+                                                installments_data: newInstallments
+                                            });
+                                        } else if (count < currentCount) {
+                                            setInstallmentFormData({
+                                                ...installmentFormData,
+                                                number_of_installments: count,
+                                                installments_data: installmentFormData.installments_data
+                                                    .slice(0, count)
+                                                    .map((inst, idx) => ({ ...inst, installment_number: idx + 1 }))
+                                            });
+                                        }
+                                    }}
+                                    min="1"
+                                    required
+                                />
+                            </div>
+
+                            <div className="mt-4">
+                                <Label className="block mb-2">Installments Details</Label>
+                                {installmentFormData.installments_data.map((installment, index) => (
+                                    <div key={index} className="grid grid-cols-12 gap-4 mb-4 p-2 border rounded">
+                                        <div className="col-span-12 sm:col-span-1">
+                                            <Label># {installment.installment_number}</Label>
+                                        </div>
+                                        <div className="col-span-12 sm:col-span-4">
+                                            <Label>Amount</Label>
+                                            <Input
+                                                type="number"
+                                                value={installment.amount}
+                                                onChange={(e) => handleInstallmentInputChange(
+                                                    index,
+                                                    'amount',
+                                                    e.target.value
+                                                )}
+                                                required
+                                            />
+                                        </div>
+                                        <div className="col-span-12 sm:col-span-4">
+                                            <Label>Due Date</Label>
+                                            <Input
+                                                type="date"
+                                                value={installment.due_date}
+                                                onChange={(e) => handleInstallmentInputChange(
+                                                    index,
+                                                    'due_date',
+                                                    e.target.value
+                                                )}
+                                                required
+                                            />
+                                        </div>
+                                        <div className="col-span-12 sm:col-span-3 flex items-end">
+                                            {installmentFormData.installments_data.length > 1 && (
+                                                <Button
+                                                    type="button"
+                                                    onClick={() => handleRemoveInstallment(index)}
+                                                    className="bg-red-500 hover:bg-red-600"
+                                                    size="sm"
+                                                >
+                                                    Remove
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex justify-between">
+                                <Button
+                                    type="button"
+                                    onClick={handleAddInstallment}
+                                    className="bg-blue-500 hover:bg-blue-600"
+                                >
+                                    Add Installment
+                                </Button>
+                                <div>
+                                    <Button
+                                        type="button"
+                                        onClick={() => setIsInstallmentDialogue(false)}
+                                        className="bg-gray-500 hover:bg-gray-600 mr-2"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button type="submit" className="bg-teal-900 hover:!bg-blue-900">
+                                        Create Installments
+                                    </Button>
+                                </div>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -757,29 +1214,52 @@ const FessCreate = () => {
                             <TableHead>Year</TableHead>
                             <TableHead>Amount</TableHead>
                             <TableHead>Action</TableHead>
+                            <TableHead>Installment</TableHead>
                         </TableRow>
                     </TableHeader>
+                    {/* fifth */}
                     <TableBody>
-                        {feeData.map((fee) => (
-                            <TableRow key={fee.fee_id}>
-                                <TableCell>{fee.course_name}</TableCell>
-                                <TableCell>{fee.standard_name}</TableCell>
-                                <TableCell>{fee.subject_name}</TableCell>
-                                <TableCell>{fee.module_name}</TableCell>
-                                <TableCell>{fee.batch_name}</TableCell>
-                                <TableCell>{fee.year}</TableCell>
-                                <TableCell>{fee.amount}</TableCell>
-                                <TableCell>
-                                    <Button
-                                        onClick={() => handleEdit(fee)}
-                                        className="bg-teal-900 hover:!bg-blue-900"
-                                        size="sm"
-                                    >
-                                        <Edit className="w-4 h-4 mr-1" /> Edit
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        {feeData.map((fee) => {
+                            const feeInstallments = installmentDetails.filter(detail =>
+                                detail.course_id === fee.course_id &&
+                                detail.standard_id === fee.standard_id &&
+                                detail.year === fee.year &&
+                                detail.subject_id === fee.subject_id &&
+                                detail.module_id === fee.module_id &&
+                                detail.batch_id === fee.batch_id
+                            );
+                            const hasInstallments = feeInstallments.length > 0;
+
+                            return (
+                                <TableRow key={fee.fee_id}>
+                                    <TableCell>{fee.course_name}</TableCell>
+                                    <TableCell>{fee.standard_name}</TableCell>
+                                    <TableCell>{fee.subject_name}</TableCell>
+                                    <TableCell>{fee.module_name}</TableCell>
+                                    <TableCell>{fee.batch_name}</TableCell>
+                                    <TableCell>{fee.year}</TableCell>
+                                    <TableCell>{fee.amount}</TableCell>
+                                    <TableCell>
+                                        <Button
+                                            onClick={() => handleEdit(fee)}
+                                            className="bg-teal-900 hover:!bg-blue-900"
+                                            size="sm"
+                                        >
+                                            <Edit className="w-4 h-4 mr-1" /> Edit
+                                        </Button>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button
+                                            onClick={() => handleInstallmentAction(fee)}
+                                            className={`${hasInstallments ? 'bg-green-600 hover:!bg-green-700' : 'bg-purple-900 hover:!bg-purple-700'}`}
+                                            size="sm"
+                                        >
+                                            {hasInstallments ? 'Installments' : 'Create Installments'}
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </div>

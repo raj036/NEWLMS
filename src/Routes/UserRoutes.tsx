@@ -22,6 +22,14 @@ import PrivacyPolicy from "pages/Privacypolicy";
 import DataSecurity from "pages/Data_Security";
 import TermsOfService from "pages/Terms_Service";
 import InstallmentManagement from "pages/Payments/InstallmentPayment";
+
+import Ibdp from "pages/CourseContent/lbdp";
+import Igcse from "pages/CourseContent/Igcse";
+import Myp from "pages/CourseContent/Myp";
+import Alevel from "pages/CourseContent/Alevel";
+import Satact from "pages/CourseContent/Satact";
+import Bridgecourse from "pages/CourseContent/Bridgecourse";
+
 const UserRoutes = () => {
   const { user } = useAuthContext();
 
@@ -98,6 +106,30 @@ const UserRoutes = () => {
     {
       path: "/privacy_policy",
       element: <PrivacyPolicy/>  ,
+    },
+    {
+      path: "/ibdp_course",
+      element: <Ibdp/>, 
+    },
+    {
+      path: "/igcse_course",
+      element: <Igcse/>, 
+    },
+    {
+      path: "/myp_course",
+      element: <Myp/>, 
+    },
+    {
+      path: "/alevel_course",
+      element: <Alevel/>, 
+    },
+    {
+      path: "/satact_course",
+      element: <Satact/>, 
+    },
+    {
+      path: "/bridge_course",
+      element: <Bridgecourse/>, 
     },
     {
       path: "/data_security",

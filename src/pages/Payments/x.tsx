@@ -10,7 +10,6 @@ import axios from "helper/axios";
 import { Link, useNavigate } from "react-router-dom";
 import html2pdf from "html2pdf.js";
 import { useRef } from "react";
-
 interface InstallmentData {
   installment_number: number;
   amount_due: number;
@@ -32,6 +31,7 @@ interface InstallmentPlan {
   installments: InstallmentData[];
 }
 
+
 const Payments = () => {
   const navigate = useNavigate();
   const [batchSize, setBatchSize] = useState<number>(0);
@@ -51,12 +51,13 @@ const Payments = () => {
     subject: "",
     module: "",
   });
+    const [installmentPlan, setInstallmentPlan] = useState<InstallmentPlan | null>(null);
+
   const [referralCode, setReferralCode] = useState<string>("");
   const [installments, setInstallments] = useState<number>(1);
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [finalAmount, setFinalAmount] = useState<number>(0);
   const [isReferralValid, setIsReferralValid] = useState<boolean>(false);
-  const [installmentPlan, setInstallmentPlan] = useState<InstallmentPlan | null>(null);
   const [installmentsData, setInstallmentsData] = useState<InstallmentData[]>(
     []
   );
@@ -64,7 +65,37 @@ const Payments = () => {
     InstallmentData[]
   >([]);
 
-  const fetchInstallmentPlan = async () => {
+  useEffect(() => {
+    if (installments > 0 && finalAmount > 0) {
+      calculateInstallments();
+    }
+  }, [installments, finalAmount]);
+
+  const calculateInstallments = () => {
+    const perInstallmentAmount =
+      Math.round(((finalAmount - discountAmount) / installments) * 100) / 100;
+    const data: InstallmentData[] = [];
+    const currentDate = new Date();
+
+    for (let i = 1; i <= installments; i++) {
+      const dueDate = new Date(currentDate);
+      dueDate.setDate(dueDate.getDate() + 30 * i);
+
+      data.push({
+        installment_number: i,
+        amount_due: perInstallmentAmount,
+        paid_amount: perInstallmentAmount,
+        status: "pending",
+        due_date: dueDate.toISOString().split("T")[0],
+      });
+    }
+
+    setInstallmentsData(data); // For UI update
+
+    return data; // For immediate usage
+  };
+
+const fetchInstallmentPlan = async () => {
     try {
       setLoading(true);
       const response = await axios.get(
@@ -110,9 +141,12 @@ console.log(response.data)
     }
   };
 
-  // Calculate installments only when no API plan exists
-  useEffect(() => {
-    if (!installmentPlan && installments > 0 && finalAmount > 0) {
+   useEffect(() => {
+    if (installmentPlan) {
+      // Use installments from API
+      setInstallmentsData(installmentPlan.installments);
+    } else if (installments > 0 && finalAmount > 0) {
+      // Calculate installments locally
       calculateInstallments();
     }
   }, [installments, finalAmount, installmentPlan]);
@@ -128,51 +162,6 @@ console.log(response.data)
       fetchInstallmentPlan();
     }
   }, [batchSize, years, reqData]);
-
-  // Calculate installments if no plan exists from API
-
-
-  // Use API installments if available, otherwise calculate
-  useEffect(() => {
-    if (installmentPlan) {
-      // Use installments from API
-      setInstallmentsData(installmentPlan.installments);
-    } else if (installments > 0 && finalAmount > 0) {
-      // Calculate installments locally
-      calculateInstallments();
-    }
-  }, [installments, finalAmount, installmentPlan]);
-
-
-  useEffect(() => {
-    if (installments > 0 && finalAmount > 0) {
-      calculateInstallments();
-    }
-  }, [installments, finalAmount]);
-
-  const calculateInstallments = () => {
-    const perInstallmentAmount =
-      Math.round(((finalAmount - discountAmount) / installments) * 100) / 100;
-    const data: InstallmentData[] = [];
-    const currentDate = new Date();
-
-    for (let i = 1; i <= installments; i++) {
-      const dueDate = new Date(currentDate);
-      dueDate.setDate(dueDate.getDate() + 30 * i);
-
-      data.push({
-        installment_number: i,
-        amount_due: perInstallmentAmount,
-        paid_amount: 0,
-        status: "pending",
-        due_date: dueDate.toISOString().split("T")[0],
-      });
-    }
-
-    setInstallmentsData(data); // For UI update
-
-    return data; // For immediate usage
-  };
 
   useEffect(() => {
     fetchReqData();
@@ -220,6 +209,294 @@ console.log(response.data)
     }
   };
 
+  // Make sure this ref is properly defined
+  const pdfRef = React.useRef(null);
+
+  // Add this function to handle PDF generation
+  // const generatePaymentSummaryPDF = (paymentID) => {
+  //   const element = pdfRef.current;
+
+  //   if (!element) return;
+
+  //   // Clone the element to modify it for PDF
+  //   const pdfContent = element.cloneNode(true);
+
+  //   // Replace external SVG with blue text for Razorpay logo
+  //   const svgImages = pdfContent.querySelectorAll(
+  //     'img[src*="razorpay-logo.svg"]'
+  //   );
+
+  //   if (svgImages.length > 0) {
+  //     svgImages.forEach((img) => {
+  //       const textLogo = document.createElement("span");
+  //       textLogo.textContent = "Razorpay";
+  //       textLogo.style.color = "#0066FF"; // Blue color
+  //       textLogo.style.fontWeight = "bold";
+  //       textLogo.style.fontSize = "18px";
+  //       textLogo.style.fontFamily = "Arial, sans-serif";
+  //       img.parentNode.replaceChild(textLogo, img);
+  //     });
+  //   }
+
+  //   const dueNowElements = pdfContent.querySelectorAll("*");
+  //   dueNowElements.forEach((element) => {
+  //     if (element.textContent && element.textContent.includes("Due now")) {
+  //       element.textContent = element.textContent.replace(
+  //         "Due now",
+  //         "Paid now"
+  //       );
+  //     }
+
+  //     // Also check for attributes like title, aria-label, etc.
+  //     if (element.hasAttributes()) {
+  //       const attributes = element.attributes;
+  //       for (let i = 0; i < attributes.length; i++) {
+  //         if (attributes[i].value && attributes[i].value.includes("Due now")) {
+  //           attributes[i].value = attributes[i].value.replace(
+  //             "Due now",
+  //             "Paid now"
+  //           );
+  //         }
+  //       }
+  //     }
+  //   });
+
+  //   // Add a title to the PDF
+  //   const titleElement = document.createElement("h1");
+  //   titleElement.textContent = "ILATE - Payment Receipt";
+  //   titleElement.style.textAlign = "center";
+  //   titleElement.style.marginBottom = "20px";
+  //   titleElement.style.color = "#7066E0";
+  //   pdfContent.prepend(titleElement);
+
+  //   // Add transaction details
+  //   const transactionDiv = document.createElement("div");
+  //   transactionDiv.innerHTML = `
+  //   <div style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+  //     <p><strong>Transaction Date:</strong> ${new Date().toLocaleDateString()}</p>
+  //     <p><strong>Transaction ID:</strong> ${paymentID} 
+  //     <p><strong>Student Name:</strong> ${user.user_name}</p>
+  //     <p><strong>Email:</strong> ${user.email_id}</p>
+  //     <p><strong>Phone:</strong> ${user.phone_no}</p>
+  //   </div>
+  // `;
+  //   pdfContent.prepend(transactionDiv);
+
+  //   // Add a thank you message at the bottom
+  //   const thankYouElement = document.createElement("div");
+  //   thankYouElement.innerHTML = `
+  //   <div style="margin-top: 30px; text-align: center; color: #333;">
+  //     <p>Thank you for enrolling with ILATE!</p>
+  //     <p>For any queries, please contact support@ilate.com</p>
+  //   </div>
+  // `;
+  //   pdfContent.appendChild(thankYouElement);
+
+  //   // PDF generation options
+  //   const opt = {
+  //     margin: [10, 10, 10, 10],
+  //     filename: `ILATE_Payment_Receipt_${
+  //       new Date().toISOString().split("T")[0]
+  //     }.pdf`,
+  //     image: { type: "jpeg", quality: 0.98 },
+  //     html2canvas: { scale: 2, useCORS: true },
+  //     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+  //   };
+
+  //   // Generate PDF
+  //   html2pdf().from(pdfContent).set(opt).save();
+  // };
+  const generatePaymentSummaryPDF = (paymentID) => {
+    const element = pdfRef.current;
+
+    if (!element) return;
+
+    // Create a new container for the AMMP-style invoice
+    const pdfContent = document.createElement("div");
+    pdfContent.style.fontFamily = "Arial, sans-serif";
+    pdfContent.style.padding = "20px";
+
+    // Add logo at the top (centered)
+    const logoDiv = document.createElement("div");
+    logoDiv.style.textAlign = "center";
+    logoDiv.style.marginBottom = "20px";
+    
+    const logoImg = document.createElement("img");
+    logoImg.src = "images/ILATE_Classes_Final_Logo-02.jpg"; // Replace with your actual logo URL
+    logoImg.style.maxWidth = "180px";
+    logoImg.style.height = "auto";
+    logoImg.alt = "ILATE Logo";
+    logoDiv.appendChild(logoImg);
+    pdfContent.appendChild(logoDiv);
+
+    // Add the invoice header
+    const header = document.createElement("h1");
+    header.textContent = "Tax Invoice";
+    header.style.textAlign = "center";
+    header.style.marginBottom = "20px";
+    header.style.color = "#000";
+    header.style.fontSize = "24px";
+    pdfContent.appendChild(header);
+
+    // Create the invoice table
+    const table = document.createElement("table");
+    table.style.width = "100%";
+    table.style.borderCollapse = "collapse";
+    table.style.marginBottom = "20px";
+
+    // Table header
+    const thead = document.createElement("thead");
+    thead.innerHTML = `
+        <tr style="border-bottom: 1px solid #000;">
+            <th style="text-align: left; padding: 8px;">Description</th>
+            <th style="text-align: left; padding: 8px;">Code</th>
+            <th style="text-align: right; padding: 8px;">Amount(₹)</th>
+        </tr>
+    `;
+    table.appendChild(thead);
+
+    // Table body with actual payment data
+    const tbody = document.createElement("tbody");
+    tbody.innerHTML = `
+        <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 8px;">Tuition & Counselling Fees (SAC Code 999293)</td>
+            <td style="padding: 8px;">A</td>
+            <td style="text-align: right; padding: 8px;">45,000.00</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 8px;">CGST @ 9%</td>
+            <td style="padding: 8px;">B</td>
+            <td style="text-align: right; padding: 8px;">4,050.00</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 8px;">SGST @ 9%</td>
+            <td style="padding: 8px;">C</td>
+            <td style="text-align: right; padding: 8px;">4,050.00</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 8px;">Subtotal TDS</td>
+            <td style="padding: 8px;">A+B+C D</td>
+            <td style="text-align: right; padding: 8px;">0</td>
+        </tr>
+        <tr style="border-top: 2px solid #000; font-weight: bold;">
+            <td style="padding: 8px;">Total</td>
+            <td style="padding: 8px;">A+B+C-D</td>
+            <td style="text-align: right; padding: 8px;">53,100.00</td>
+        </tr>
+    `;
+    table.appendChild(tbody);
+    pdfContent.appendChild(table);
+
+    // Add horizontal line
+    const hr = document.createElement("hr");
+    hr.style.margin = "20px 0";
+    pdfContent.appendChild(hr);
+
+    // Add address information
+    const addressDiv = document.createElement("div");
+    addressDiv.style.marginBottom = "20px";
+    addressDiv.innerHTML = `
+        <p>404, B Wing, Ganga Jamuna CHS</p>
+        <p>Rd Number 24, Next to Starbucks,</p>
+        <p>Bandra West, Mumbai - 400 052.</p>
+        <p>Contact No : 9702279804 | 9702071599</p>
+        <p>Email : info.ilate@gmail.com</p>
+    `;
+    pdfContent.appendChild(addressDiv);
+
+    // Add another horizontal line
+    pdfContent.appendChild(hr.cloneNode());
+
+    // Add payment details section
+    const paymentDetails = document.createElement("div");
+    paymentDetails.style.marginBottom = "20px";
+    paymentDetails.innerHTML = `
+        <p>GST # : 27AAECI2456R1Z1</p>
+        <p>Account Name : ILATE Education Pvt Ltd</p>
+        <p>Account # : 1234567890</p>
+        <p>IFSC : HDFC0000123</p>
+    `;
+    pdfContent.appendChild(paymentDetails);
+
+    // Add another horizontal line
+    pdfContent.appendChild(hr.cloneNode());
+
+    // Add invoice number and date
+    const invoiceNumber = `AMMP${Math.floor(1000 + Math.random() * 9000)}`;
+    const invoiceInfo = document.createElement("div");
+    invoiceInfo.style.display = "flex";
+    invoiceInfo.style.justifyContent = "space-between";
+    invoiceInfo.style.marginBottom = "20px";
+    invoiceInfo.innerHTML = `
+        <div><strong>${invoiceNumber}</strong></div>
+        <div>${new Date().toLocaleDateString('en-IN')}</div>
+    `;
+    pdfContent.appendChild(invoiceInfo);
+
+    // Add another horizontal line
+    pdfContent.appendChild(hr.cloneNode());
+
+    // Add bill to section with student details
+    const billTo = document.createElement("div");
+    billTo.style.marginBottom = "20px";
+    billTo.innerHTML = `
+        <p><strong>Bill To</strong></p>
+        <p>Name : ${user.user_name}</p>
+        <p>Email : ${user.email_id}</p>
+        <p>Phone : ${user.phone_no}</p>
+        <p>Address : </p>
+        <p>GST # : </p>
+    `;
+    pdfContent.appendChild(billTo);
+
+    // Add payment method
+    const paymentMethod = document.createElement("div");
+    paymentMethod.style.textAlign = "center";
+    paymentMethod.style.marginTop = "30px";
+    paymentMethod.style.color = "#0066FF";
+    paymentMethod.style.fontWeight = "bold";
+    paymentMethod.style.fontSize = "18px";
+    paymentMethod.textContent = "Secured Payment By Razorpay";
+    pdfContent.appendChild(paymentMethod);
+
+    // Add transaction ID
+    const transactionInfo = document.createElement("div");
+    transactionInfo.style.textAlign = "center";
+    transactionInfo.style.margin = "10px 0";
+    transactionInfo.innerHTML = `
+        <p>Transaction ID: ${paymentID}</p>
+        <p>Payment Date: ${new Date().toLocaleString('en-IN')}</p>
+    `;
+    pdfContent.appendChild(transactionInfo);
+
+    // Add thank you message
+    const thankYou = document.createElement("div");
+    thankYou.style.textAlign = "center";
+    thankYou.style.marginTop = "20px";
+    thankYou.style.color = "#333";
+    thankYou.innerHTML = `
+        <p>Thank you for enrolling with ILATE!</p>
+        <p>For any queries, please contact support@ilate.com</p>
+    `;
+    pdfContent.appendChild(thankYou);
+
+    // PDF generation options
+    const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `${invoiceNumber}_${user.user_name.replace(" ", "_")}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { 
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: true
+        },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    };
+
+    // Generate PDF
+    html2pdf().from(pdfContent).set(opt).save();
+};
   const getFees = async () => {
     try {
       setLoading(true);
@@ -394,17 +671,16 @@ console.log(response.data)
 
       if (response.data.status === "success") {
         // Store the installments data
-        if (response.data.installments_data) {
-          setInstallmentsData(response.data.installments_data);
-        }
+        // if (response.data.installments_data) {
+        //   setInstallmentsData(response.data.installments_data);
+        // }
 
         // Get the payment amount - for installments, this will be just the first installment amount
         const installmentsData = response.data.installments_data || [];
-        console.log("paymentAmt",installmentsData)
         const isInstallmentEnabled = installmentsData.length > 0;
 
         const paymentAmount = isInstallmentEnabled
-          ? installmentsData[0].amount
+          ? installmentsData[0].amount_due
           : response.data.order_details.amount;
 
         console.log("paymentAmount", paymentAmount);
@@ -487,435 +763,19 @@ console.log(response.data)
       });
     }
   };
-  const pdfRef = React.useRef(null);
-
-  //    const generatePaymentSummaryPDF = (paymentID) => {
-  //     console.log("hi generate pdf summary")
-  //      const element = pdfRef.current;
-   
-  //      if (!element) return;
-   
-  //      // Create a new container for the AMMP-style invoice
-  //      const pdfContent = document.createElement("div");
-  //      pdfContent.style.fontFamily = "Arial, sans-serif";
-  //      pdfContent.style.padding = "20px";
-   
-  //      // Add logo at the top (centered)
-  //      const logoDiv = document.createElement("div");
-  //      logoDiv.style.textAlign = "center";
-  //      logoDiv.style.marginBottom = "20px";
-       
-  //      const logoImg = document.createElement("img");
-  //      logoImg.src = "/images/ILATE_Classes_Final_Logo-02.jpg"; // Replace with your actual logo URL
-  //      logoImg.style.maxWidth = "180px";
-  //      logoImg.style.height = "auto";
-  //      logoImg.alt = "ILATE Logo";
-  //      logoDiv.appendChild(logoImg);
-  //      pdfContent.appendChild(logoDiv);
-   
-  //      // Add the invoice header
-  //      const header = document.createElement("h1");
-  //      header.textContent = "Tax Invoice";
-  //      header.style.textAlign = "center";
-  //      header.style.marginBottom = "20px";
-  //      header.style.color = "#000";
-  //      header.style.fontSize = "24px";
-  //      pdfContent.appendChild(header);
-   
-  //      // Create the invoice table
-  //      const table = document.createElement("table");
-  //      table.style.width = "100%";
-  //      table.style.borderCollapse = "collapse";
-  //      table.style.marginBottom = "20px";
-   
-  //      // Table header
-  //      const thead = document.createElement("thead");
-  //      thead.innerHTML = `
-  //          <tr style="border-bottom: 1px solid #000;">
-  //              <th style="text-align: left; padding: 8px;">Description</th>
-  //              <th style="text-align: left; padding: 8px;">Code</th>
-  //              <th style="text-align: right; padding: 8px;">Amount(₹)</th>
-  //          </tr>
-  //      `;
-  //      table.appendChild(thead);
-   
-  //      // Table body with actual payment data
-  //      const tbody = document.createElement("tbody");
-  //      tbody.innerHTML = `
-  //          <tr style="border-bottom: 1px solid #ddd;">
-  //              <td style="padding: 8px;">Tuition & Counselling Fees (SAC Code 999293)</td>
-  //              <td style="padding: 8px;">A</td>
-  //              <td style="text-align: right; padding: 8px;">45,000.00</td>
-  //          </tr>
-  //          <tr style="border-bottom: 1px solid #ddd;">
-  //              <td style="padding: 8px;">CGST @ 9%</td>
-  //              <td style="padding: 8px;">B</td>
-  //              <td style="text-align: right; padding: 8px;">4,050.00</td>
-  //          </tr>
-  //          <tr style="border-bottom: 1px solid #ddd;">
-  //              <td style="padding: 8px;">SGST @ 9%</td>
-  //              <td style="padding: 8px;">C</td>
-  //              <td style="text-align: right; padding: 8px;">4,050.00</td>
-  //          </tr>
-  //          <tr style="border-bottom: 1px solid #ddd;">
-  //              <td style="padding: 8px;">Subtotal TDS</td>
-  //              <td style="padding: 8px;">A+B+C D</td>
-  //              <td style="text-align: right; padding: 8px;">0</td>
-  //          </tr>
-  //          <tr style="border-top: 2px solid #000; font-weight: bold;">
-  //              <td style="padding: 8px;">Total</td>
-  //              <td style="padding: 8px;">A+B+C-D</td>
-  //              <td style="text-align: right; padding: 8px;">53,100.00</td>
-  //          </tr>
-  //      `;
-  //      table.appendChild(tbody);
-  //      pdfContent.appendChild(table);
-   
-  //      // Add horizontal line
-  //      const hr = document.createElement("hr");
-  //      hr.style.margin = "20px 0";
-  //      pdfContent.appendChild(hr);
-   
-  //      // Add address information
-  //      const addressDiv = document.createElement("div");
-  //      addressDiv.style.marginBottom = "20px";
-  //      addressDiv.innerHTML = `
-  //          <p>404, B Wing, Ganga Jamuna CHS</p>
-  //          <p>Rd Number 24, Next to Starbucks,</p>
-  //          <p>Bandra West, Mumbai - 400 052.</p>
-  //          <p>Contact No : 9702279804 | 9702071599</p>
-  //          <p>Email : info.ilate@gmail.com</p>
-  //      `;
-  //      pdfContent.appendChild(addressDiv);
-   
-  //      // Add another horizontal line
-  //      pdfContent.appendChild(hr.cloneNode());
-   
-  //      // Add payment details section
-  //      const paymentDetails = document.createElement("div");
-  //      paymentDetails.style.marginBottom = "20px";
-  //      paymentDetails.innerHTML = `
-  //          <p>GST # : 27AAECI2456R1Z1</p>
-  //          <p>Account Name : ILATE Education Pvt Ltd</p>
-  //          <p>Account # : 1234567890</p>
-  //          <p>IFSC : HDFC0000123</p>
-  //      `;
-  //      pdfContent.appendChild(paymentDetails);
-   
-  //      // Add another horizontal line
-  //      pdfContent.appendChild(hr.cloneNode());
-   
-  //      // Add invoice number and date
-  //      const invoiceNumber = `AMMP${Math.floor(1000 + Math.random() * 9000)}`;
-  //      const invoiceInfo = document.createElement("div");
-  //      invoiceInfo.style.display = "flex";
-  //      invoiceInfo.style.justifyContent = "space-between";
-  //      invoiceInfo.style.marginBottom = "20px";
-  //      invoiceInfo.innerHTML = `
-  //          <div><strong>${invoiceNumber}</strong></div>
-  //          <div>${new Date().toLocaleDateString('en-IN')}</div>
-  //      `;
-  //      pdfContent.appendChild(invoiceInfo);
-   
-  //      // Add another horizontal line
-  //      pdfContent.appendChild(hr.cloneNode());
-   
-  //      // Add bill to section with student details
-  //      const billTo = document.createElement("div");
-  //      billTo.style.marginBottom = "20px";
-  //      billTo.innerHTML = `
-  //          <p><strong>Bill To</strong></p>
-  //          <p>Name : ${user.user_name}</p>
-  //          <p>Email : ${user.email_id}</p>
-  //          <p>Phone : ${user.phone_no}</p>
-  //          <p>Address : </p>
-  //          <p>GST # : </p>
-  //      `;
-  //      pdfContent.appendChild(billTo);
-   
-  //      // Add payment method
-  //      const paymentMethod = document.createElement("div");
-  //      paymentMethod.style.textAlign = "center";
-  //      paymentMethod.style.marginTop = "30px";
-  //      paymentMethod.style.color = "#0066FF";
-  //      paymentMethod.style.fontWeight = "bold";
-  //      paymentMethod.style.fontSize = "18px";
-  //      paymentMethod.textContent = "Secured Payment By Razorpay";
-  //      pdfContent.appendChild(paymentMethod);
-   
-  //      // Add transaction ID
-  //      const transactionInfo = document.createElement("div");
-  //      transactionInfo.style.textAlign = "center";
-  //      transactionInfo.style.margin = "10px 0";
-  //      transactionInfo.innerHTML = `
-  //          <p>Transaction ID: ${paymentID}</p>
-  //          <p>Payment Date: ${new Date().toLocaleString('en-IN')}</p>
-  //      `;
-  //      pdfContent.appendChild(transactionInfo);
-   
-  //      // Add thank you message
-  //      const thankYou = document.createElement("div");
-  //      thankYou.style.textAlign = "center";
-  //      thankYou.style.marginTop = "20px";
-  //      thankYou.style.color = "#333";
-  //      thankYou.innerHTML = `
-  //          <p>Thank you for enrolling with ILATE!</p>
-  //          <p>For any queries, please contact support@ilate.com</p>
-  //      `;
-  //      pdfContent.appendChild(thankYou);
-   
-  //      // PDF generation options
-  //      const opt = {
-  //          margin: [10, 10, 10, 10],
-  //          filename: `${invoiceNumber}_${user.user_name.replace(" ", "_")}.pdf`,
-  //          image: { type: "jpeg", quality: 0.98 },
-  //          html2canvas: { 
-  //              scale: 2,
-  //              useCORS: true,
-  //              allowTaint: true,
-  //              logging: true
-  //          },
-  //          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-  //      };
-   
-  //      // Generate PDF
-  //      html2pdf().from(pdfContent).set(opt).save();
-  //  };
-
-// const generatePaymentSummaryPDF = (paymentID) => {
-//     const element = pdfRef.current;
-
-//     if (!element) return;
-
-//     // Clone the element to modify it for PDF
-//     const pdfContent = element.cloneNode(true);
-
-//     // Replace external SVG with blue text for Razorpay logo
-//     const svgImages = pdfContent.querySelectorAll(
-//       'img[src*="razorpay-logo.svg"]'
-//     );
-
-//     if (svgImages.length > 0) {
-//       svgImages.forEach((img) => {
-//         const textLogo = document.createElement("span");
-//         textLogo.textContent = "Razorpay";
-//         textLogo.style.color = "#0066FF"; // Blue color
-//         textLogo.style.fontWeight = "bold";
-//         textLogo.style.fontSize = "18px";
-//         textLogo.style.fontFamily = "Arial, sans-serif";
-//         img.parentNode.replaceChild(textLogo, img);
-//       });
-//     }
-
-//     const dueNowElements = pdfContent.querySelectorAll("*");
-//     dueNowElements.forEach((element) => {
-//       if (element.textContent && element.textContent.includes("Due now")) {
-//         element.textContent = element.textContent.replace(
-//           "Due now",
-//           "Paid now"
-//         );
-//       }
-
-//       // Also check for attributes like title, aria-label, etc.
-//       if (element.hasAttributes()) {
-//         const attributes = element.attributes;
-//         for (let i = 0; i < attributes.length; i++) {
-//           if (attributes[i].value && attributes[i].value.includes("Due now")) {
-//             attributes[i].value = attributes[i].value.replace(
-//               "Due now",
-//               "Paid now"
-//             );
-//           }
-//         }
-//       }
-//     });
-
-//     // Add a title to the PDF
-//     // const titleElement = document.createElement("h1");
-//     // titleElement.textContent = "ILATE - Payment Receipt";
-//     // titleElement.style.textAlign = "center";
-//     // titleElement.style.marginBottom = "20px";
-//     // titleElement.style.color = "#7066E0";
-//     // pdfContent.prepend(titleElement);
-
-//     // Add transaction details
-//     const transactionDiv = document.createElement("div");
-//     transactionDiv.innerHTML = `
-//     <div style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
-//       <p><strong>Transaction Date:</strong> ${new Date().toLocaleDateString()}</p>
-//       <p><strong>Transaction ID:</strong> ${paymentID} 
-//       <p><strong>Student Name:</strong> ${user.user_name}</p>
-//       <p><strong>Email:</strong> ${user.email_id}</p>
-//       <p><strong>Phone:</strong> ${user.phone_no}</p>
-//     </div>
-//   `;
-//     pdfContent.prepend(transactionDiv);
-
-//     // Add a thank you message at the bottom
-//     const thankYouElement = document.createElement("div");
-//     thankYouElement.innerHTML = `
-//     <div style="margin-top: 30px; text-align: center; color: #333;">
-//       <p>Thank you for enrolling with ILATE!</p>
-//       <p>For any queries, please contact support@ilate.com</p>
-//     </div>
-//   `;
-//     pdfContent.appendChild(thankYouElement);
-
-//     // PDF generation options
-//     const opt = {
-//       margin: [10, 10, 10, 10],
-//       filename: `ILATE_Payment_Receipt_${
-//         new Date().toISOString().split("T")[0]
-//       }.pdf`,
-//       image: { type: "jpeg", quality: 0.98 },
-//       html2canvas: { scale: 2, useCORS: true },
-//       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-//     };
-
-//     // Generate PDF
-//     html2pdf().from(pdfContent).set(opt).save();
-//   }; 
-
-const generatePaymentSummaryPDF = (paymentID) => {
-    const element = pdfRef.current;
-
-    if (!element) return;
-
-    // Clone the element to modify it for PDF
-    const pdfContent = element.cloneNode(true);
-
-    // Replace external SVG with blue text for Razorpay logo
-    const svgImages = pdfContent.querySelectorAll('img[src*="razorpay-logo.svg"]');
-    if (svgImages.length > 0) {
-      svgImages.forEach((img) => {
-        const textLogo = document.createElement("span");
-        textLogo.textContent = "Razorpay";
-        textLogo.style.color = "#0066FF";
-        textLogo.style.fontWeight = "bold";
-        textLogo.style.fontSize = "18px";
-        textLogo.style.fontFamily = "Arial, sans-serif";
-        img.parentNode.replaceChild(textLogo, img);
-      });
-    }
-
-    // Update "Due now" to "Paid now"
-    const dueNowElements = pdfContent.querySelectorAll("*");
-    dueNowElements.forEach((element) => {
-      if (element.textContent && element.textContent.includes("Due now")) {
-        element.textContent = element.textContent.replace("Due now", "Paid now");
-      }
-
-      if (element.hasAttributes()) {
-        const attributes = element.attributes;
-        for (let i = 0; i < attributes.length; i++) {
-          if (attributes[i].value && attributes[i].value.includes("Due now")) {
-            attributes[i].value = attributes[i].value.replace("Due now", "Paid now");
-          }
-        }
-      }
-    });
-
-    // Create header container with improved layout
-    const headerContainer = document.createElement("div");
-    headerContainer.style.display = "flex";
-    headerContainer.style.justifyContent = "space-between";
-    headerContainer.style.alignItems = "flex-start"; // Changed to flex-start for better alignment
-    headerContainer.style.marginBottom = "25px"; // Increased margin
-    headerContainer.style.borderBottom = "1px solid #ccc";
-    headerContainer.style.paddingBottom = "15px"; // Increased padding
-    headerContainer.style.width = "100%";
-
-    // Add logo on the left with proper sizing
-    const logoContainer = document.createElement("div");
-    logoContainer.style.flex = "0 0 auto"; // Prevent logo from stretching
-    logoContainer.style.marginRight = "20px"; // Add space between logo and details
-    logoContainer.innerHTML = `
-      <img src="images/ILATE_Classes_Final_Logo-02.jpg" 
-           alt="ILATE Logo" 
-           style="height: 60px; max-width: 150px; object-fit: contain;"/>
-    `;
-    headerContainer.appendChild(logoContainer);
-
-    // Add transaction details on the right with better spacing
-    const transactionDiv = document.createElement("div");
-    transactionDiv.style.flex = "1 1 auto"; // Allow details to take remaining space
-    transactionDiv.style.textAlign = "right";
-    transactionDiv.style.minWidth = "0"; // Prevent overflow
-    transactionDiv.innerHTML = `
-      <p style="margin: 4px 0; line-height: 1.4;"><strong>Transaction Date:</strong> ${new Date().toLocaleDateString()}</p>
-      <p style="margin: 4px 0; line-height: 1.4;"><strong>Transaction ID:</strong> ${paymentID}</p>
-      <p style="margin: 4px 0; line-height: 1.4;"><strong>Student Name:</strong> ${user.user_name}</p>
-      <p style="margin: 4px 0; line-height: 1.4;"><strong>Email:</strong> ${user.email_id}</p>
-      <p style="margin: 4px 0; line-height: 1.4;"><strong>Phone:</strong> ${user.phone_no}</p>
-    `;
-    headerContainer.appendChild(transactionDiv);
-
-    // Add the header container to the PDF content
-    pdfContent.prepend(headerContainer);
-
-    // Add spacing to payment schedule section to prevent overlap
-    const paymentSchedule = pdfContent.querySelector('.payment-schedule'); // Add this class to your payment schedule section
-    if (paymentSchedule) {
-      paymentSchedule.style.marginTop = "20px";
-      paymentSchedule.style.marginBottom = "20px";
-    }
-
-    // Add thank you message at the bottom
-    const thankYouElement = document.createElement("div");
-    thankYouElement.innerHTML = `
-    <div style="margin-top: 30px; padding-top: 20px; text-align: center; color: #333; border-top: 1px solid #ccc;">
-      <p style="margin-bottom: 8px;">Thank you for enrolling with ILATE!</p>
-      <p>For any queries, please contact support@ilate.com</p>
-    </div>
-    `;
-    pdfContent.appendChild(thankYouElement);
-
-    // Improved PDF generation options
-    const opt = {
-      margin: [15, 15, 15, 15], // Increased margins
-      filename: `ILATE_Payment_Receipt_${new Date().toISOString().split("T")[0]}.pdf`,
-      image: { 
-        type: "jpeg", 
-        quality: 0.98,
-        backgroundColor: '#FFFFFF' // Ensure white background for images
-      },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true,
-        letterRendering: true,
-        allowTaint: true,
-        logging: true // Helpful for debugging
-      },
-      jsPDF: { 
-        unit: "mm", 
-        format: "a4", 
-        orientation: "portrait",
-        hotfixes: ["px_scaling"]
-      },
-    };
-
-    // Generate PDF with error handling
-    try {
-      html2pdf().from(pdfContent).set(opt).save();
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("There was an error generating the PDF. Please try again.");
-    }
-};
 
   const verifyPayment = async (paymentData) => {
     try {
       setLoading(true);
-      const installmentsToSend = calculateInstallments();
       const verificationData = {
-                installments_data:installmentsData,
+        installments_data:installmentsData,
         razorpay_order_id: paymentData.razorpay_order_id,
         razorpay_payment_id: paymentData.razorpay_payment_id,
         razorpay_signature: paymentData.razorpay_signature,
 
       };
-      console.log(verificationData, 'verify data');
-
+    console.log(verificationData);
+    console.log(installmentsData);
       const response = await axios.post(
         `/api/verify_payment/`,
         verificationData,
@@ -930,12 +790,11 @@ const generatePaymentSummaryPDF = (paymentID) => {
       setLoading(false);
 
       if (response.data.status === "success") {
-       generatePaymentSummaryPDF(verificationData.razorpay_payment_id);
-
+        generatePaymentSummaryPDF(verificationData.razorpay_payment_id);
         Swal.fire({
           icon: "success",
           title: "Payment Successful!",
-          text: "Thank you for enrolling with ILATE. Your payment has been received successfully. Your application is under verification. Please wait for further confirmation.",
+          text: "Thank you for enrolling with ILATE",
           confirmButtonColor: "#7066E0",
           customClass: {
             icon: "swal-my-icon",
@@ -1029,12 +888,12 @@ const generatePaymentSummaryPDF = (paymentID) => {
       </Helmet>
       <section className="container mx-auto my-10">
         <div className="grid grid-cols-2 sm:grid-cols-1">
-          <div className="px-4 py-8 lg:py-16 md:col-span-1">
+          <div className="py-8 px-4 lg:py-16 md:col-span-1">
             <div className="mb-5">
               <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white">
                 Payment
               </h1>
-              <p className="mt-2 text-gray-500">
+              <p className="text-gray-500 mt-2">
                 Some Data Has Been Taken From Admission Form You Have Submitted
               </p>
             </div>
@@ -1043,7 +902,7 @@ const generatePaymentSummaryPDF = (paymentID) => {
                 <img
                   loading="lazy"
                   src={profileImg}
-                  className="border rounded-full w-28 h-28"
+                  className="w-28 h-28 rounded-full border"
                   alt="Profile"
                 />
               </div>
@@ -1054,7 +913,7 @@ const generatePaymentSummaryPDF = (paymentID) => {
               </div>
             </div>
             <div>
-              <h2 className="mb-3 text-xl font-bold">
+              <h2 className="text-xl font-bold mb-3">
                 You Have Enrolled for Below Criterias
               </h2>
               <p className="my-2">
@@ -1070,14 +929,14 @@ const generatePaymentSummaryPDF = (paymentID) => {
                 Modules : <strong>{courseData.module}</strong>
               </p>
             </div>
-            <h2 className="mt-4 mb-2 text-xl font-bold">
+            <h2 className="text-xl font-bold mt-4 mb-2">
               Kindly Fill Below Details
             </h2>
             <form onSubmit={handleFees}>
-              <div className="flex items-center justify-start">
+              <div className="flex justify-start items-center">
                 <Heading
                   size="s"
-                  className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
+                  className="w-full max-w-max mr-4 text-sm font-medium text-gray-900 dark:text-white-A700"
                 >
                   Batch Size<span className="text-red-500">*</span>
                 </Heading>
@@ -1113,10 +972,10 @@ const generatePaymentSummaryPDF = (paymentID) => {
                   )}
                 </select>
               </div>
-              <div className="flex items-center justify-start my-5">
+              <div className="flex justify-start items-center my-5">
                 <Heading
                   size="s"
-                  className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
+                  className="mr-4 w-full max-w-max text-sm font-medium text-gray-900 dark:text-white-A700"
                 >
                   Number of Years
                   <span className="text-red-500">*</span>
@@ -1143,10 +1002,6 @@ const generatePaymentSummaryPDF = (paymentID) => {
                   </option>
                   <option value="1">1 Year</option>
                   <option value="2">2 Years</option>
-                  <option value="3">3 Years</option>
-
-
-
                 </select>
               </div>
               <Button
@@ -1161,21 +1016,21 @@ const generatePaymentSummaryPDF = (paymentID) => {
             </form>
             {amount !== 0 && feesAmoutCh && batchSize !== 0 && years !== 0 && (
               <>
-                <h2 className="my-2 text-xl font-bold">
+                <h2 className="text-xl font-bold my-2">
                   Fees Amount :{" "}
                   <span className="text-2xl">
                     <FormatPrice price={amount ? amount : 0} />
                   </span>
-                  <p className="text-xs font-medium text-gray-500">
+                  <p className="text-xs text-gray-500 font-medium">
                     Fees Has Been Calculated Based on the Criteria and Batch
                     Size You've Selected
                   </p>
                 </h2>
 
-                <div className="flex items-center justify-start max-w-6xl my-5">
+                <div className="flex max-w-6xl justify-start items-center my-5">
                   <Heading
                     size="s"
-                    className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
+                    className="w-full max-w-max mr-4 text-sm font-medium text-gray-900 dark:text-white-A700"
                   >
                     Referral Code (Optional)
                   </Heading>
@@ -1197,7 +1052,7 @@ const generatePaymentSummaryPDF = (paymentID) => {
                     />
                     <Button
                       variant="ilate"
-                      className="rounded-l-none rounded-r-md"
+                      className="rounded-r-md rounded-l-none"
                       type="button"
                       onClick={checkReferralCode}
                       disabled={!referralCode || loading}
@@ -1208,14 +1063,14 @@ const generatePaymentSummaryPDF = (paymentID) => {
                 </div>
 
                 {discountAmount > 0 && (
-                  <div className="p-3 my-2 border border-green-300 rounded-md bg-green-50">
+                  <div className="my-2 p-3 bg-green-50 border border-green-300 rounded-md">
                     <p className="text-green-800">
                       Discount Applied:{" "}
                       <strong>
                         <FormatPrice price={discountAmount} />
                       </strong>
                     </p>
-                    <p className="font-bold text-green-800">
+                    <p className="text-green-800 font-bold">
                       Final Amount:{" "}
                       <FormatPrice price={finalAmount - discountAmount} />
                     </p>
@@ -1227,10 +1082,10 @@ const generatePaymentSummaryPDF = (paymentID) => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-start max-w-6xl my-5">
+                <div className="flex max-w-6xl justify-start items-center my-5">
                   <Heading
                     size="s"
-                    className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
+                    className="w-full max-w-max mr-4 text-sm font-medium text-gray-900 dark:text-white-A700"
                   >
                     Installments
                   </Heading>
@@ -1238,9 +1093,10 @@ const generatePaymentSummaryPDF = (paymentID) => {
                     name="installments"
                     id="installments"
                     value={installments}
-                    onChange={(e) => setInstallments(parseInt(e.target.value))}
-                    disabled={!!installmentPlan} // Disable if API plan exists
+                            disabled={!!installmentPlan} // Disable if API plan exists
+
                     className="p-3 my-2 bg-teal-900 border border-teal-90 !text-white-A700 text-sm rounded-[20px] focus:ring-white-A700 focus:border-white-A700 block w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                    onChange={(e) => setInstallments(parseInt(e.target.value))}
                   >
                     <option value="1">Single Payment</option>
                     <option value="2">2 Installments</option>
@@ -1248,7 +1104,7 @@ const generatePaymentSummaryPDF = (paymentID) => {
                   </select>
                 </div>
 
-                <div className="flex my-4">
+                <div className="my-4 flex">
                   <label className="flex items-center mx-2">
                     <input
                       type="radio"
@@ -1288,12 +1144,12 @@ const generatePaymentSummaryPDF = (paymentID) => {
 
             {batchSize !== 0 && paymentMode === "online" ? (
               <>
-                <div className="p-4 my-5 border border-blue-200 rounded-md bg-blue-50">
+                <div className="my-5 p-4 bg-blue-50 border border-blue-200 rounded-md">
                   <div className="mt-4 text-sm text-gray-600">
-                    <h4 className="mb-1 font-semibold">
+                    <h4 className="font-semibold mb-1">
                       Terms and Conditions:
                     </h4>
-                    <ul className="pl-5 space-y-1 list-disc">
+                    <ul className="list-disc pl-5 space-y-1">
                       <li>
                         Payments are processed through Razorpay's secure
                         gateway.
@@ -1333,10 +1189,10 @@ const generatePaymentSummaryPDF = (paymentID) => {
                     </div>
                   )}
                 </div>
-                <div className="flex items-center justify-start max-w-6xl my-5">
+                <div className="flex max-w-6xl justify-start items-center my-5">
                   <Heading
                     size="s"
-                    className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
+                    className="w-full max-w-max mr-4 text-sm font-medium text-gray-900 dark:text-white-A700"
                   >
                     Other Information (Optional)
                   </Heading>
@@ -1368,7 +1224,7 @@ const generatePaymentSummaryPDF = (paymentID) => {
               batchSize !== 0 &&
               paymentMode === "offline" && (
                 <>
-                  <div className="p-4 border rounded-md border-black-900">
+                  <div className="border border-black-900 rounded-md p-4">
                     <div className="text-center">
                       <h2 className="text-xl font-bold">
                         Pay Via Bank Transfer
@@ -1377,61 +1233,61 @@ const generatePaymentSummaryPDF = (paymentID) => {
                         Enter bank details as follows & pay
                       </p>
                     </div>
-                    <table className="w-full h-full mt-4 border table-fixed border-black-900">
+                    <table className="table-fixed border border-black-900 w-full h-full mt-4">
                       <tbody>
                         <tr>
-                          <td className="p-2 font-bold border border-black-900">
+                          <td className="border border-black-900 p-2 font-bold">
                             Account Name
                           </td>
-                          <td className="p-2 border border-black-900">ILATE</td>
+                          <td className="border border-black-900 p-2">ILATE</td>
                         </tr>
                         <tr>
-                          <td className="p-2 font-bold border border-black-900">
+                          <td className="border border-black-900 p-2 font-bold">
                             Account No.
                           </td>
-                          <td className="p-2 border border-black-900">
+                          <td className="border border-black-900 p-2">
                             50200055073020
                           </td>
                         </tr>
                         <tr>
-                          <td className="p-2 font-bold border border-black-900">
+                          <td className="border border-black-900 p-2 font-bold">
                             Bank
                           </td>
-                          <td className="p-2 border border-black-900">
+                          <td className="border border-black-900 p-2">
                             HDFC Bank
                           </td>
                         </tr>
                         <tr>
-                          <td className="p-2 font-bold border border-black-900">
+                          <td className="border border-black-900 p-2 font-bold">
                             Account Type
                           </td>
-                          <td className="p-2 border border-black-900">
+                          <td className="border border-black-900 p-2">
                             Current Account
                           </td>
                         </tr>
                         <tr>
-                          <td className="p-2 font-bold border border-black-900">
+                          <td className="border border-black-900 p-2 font-bold">
                             IFSC
                           </td>
-                          <td className="p-2 border border-black-900">
+                          <td className="border border-black-900 p-2">
                             HDFC0001946
                           </td>
                         </tr>
                         <tr>
-                          <td className="p-2 font-bold border border-black-900">
+                          <td className="border border-black-900 p-2 font-bold">
                             Branch
                           </td>
-                          <td className="p-2 border border-black-900">
+                          <td className="border border-black-900 p-2">
                             Andheri East, Mumbai
                           </td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
-                  <div className="flex items-center justify-start max-w-6xl my-5">
+                  <div className="flex max-w-6xl justify-start items-center my-5">
                     <Heading
                       size="s"
-                      className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
+                      className="w-full max-w-max mr-4 text-sm font-medium text-gray-900 dark:text-white-A700"
                     >
                       Payment Information<span className="text-red-500">*</span>
                     </Heading>
@@ -1447,10 +1303,10 @@ const generatePaymentSummaryPDF = (paymentID) => {
                       required
                     />
                   </div>
-                  <div className="flex items-center justify-start max-w-6xl my-5">
+                  <div className="flex max-w-6xl justify-start items-center my-5">
                     <Heading
                       size="s"
-                      className="w-full mr-4 text-sm font-medium text-gray-900 max-w-max dark:text-white-A700"
+                      className="w-full max-w-max mr-4 text-sm font-medium text-gray-900 dark:text-white-A700"
                     >
                       Other Information (Optional)
                     </Heading>
@@ -1481,10 +1337,9 @@ const generatePaymentSummaryPDF = (paymentID) => {
               )
             )}
           </div>
-          <div ref={pdfRef} className="px-4 py-8 lg:py-16 md:col-span-1">
+          <div ref={pdfRef} className="py-8 px-4 lg:py-16 md:col-span-1">
             {finalAmount > 0 ? (
-              <>
-                <div className="sticky p-5 border border-gray-200 rounded-lg bg-gray-50 top-5">
+             <div className="sticky p-5 border border-gray-200 rounded-lg bg-gray-50 top-5">
                   <h2 className="mb-4 text-2xl font-bold">Payment Summary</h2>
                   <div className="pb-3 mb-3 border-b">
                     <p className="flex justify-between mb-2">
@@ -1598,10 +1453,9 @@ const generatePaymentSummaryPDF = (paymentID) => {
                     </div>
                   )}
                 </div>
-              </>
             ) : (
               <>
-                <p className="mb-5 text-lg font-bold">
+                <p className="mb-5 font-bold text-lg">
                   Payment Terms & Conditions
                 </p>
                 <ul className="flex flex-col items-start justify-center gap-4 text-sm text-gray-500">
@@ -1658,6 +1512,11 @@ const generatePaymentSummaryPDF = (paymentID) => {
               </>
             )}
           </div>
+          {/* <Link to="/installment_payment">
+                      <button className="bg-blue-500 text-white px-4 py-2 rounded">
+                        Pay Installment
+                      </button>
+                    </Link> */}
         </div>
       </section>
     </>

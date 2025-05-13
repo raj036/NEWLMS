@@ -541,13 +541,16 @@ export default function HomePage() {
                         >
                           <Img src="images/IBDP.svg" />
                         </Button>
-                        <Heading
+                        <Link to="/ibdp_course">
+                                 <Heading
                           size="xl"
                           as="h5"
                           className="ml-1 tracking-[0.10px] !font-montserrat"
                         >
                           IBDP
                         </Heading>
+                        </Link>
+                       
                         <div className="h-0.5 w-[17%] ml-[5px] bg-red-600" />
                         <Text
                           as="p"
@@ -569,13 +572,17 @@ export default function HomePage() {
                         >
                           <Img src="images/IGCSE.svg" />
                         </Button>
-                        <Heading
+                        <Link to="/igcse_course">
+                         <Heading
                           size="xl"
                           as="h6"
                           className="ml-[5px] tracking-[0.10px] !font-montserrat"
                         >
                           IGCSE
                         </Heading>
+                        </Link>
+
+                        
                         <div className="h-0.5 w-[17%] ml-[5px] bg-red-600" />
                         <Text
                           as="p"
@@ -596,13 +603,16 @@ export default function HomePage() {
                         >
                           <Img src="images/MYP.svg" />
                         </Button>
-                        <Heading
+                        <Link to="/myp_course">
+                            <Heading
                           size="xl"
                           as="h5"
                           className="ml-[5px] tracking-[0.10px] !font-montserrat"
                         >
                           MYP
                         </Heading>
+                        </Link>
+                       
                         <div className="h-0.5 w-[17%] ml-[5px] bg-red-600" />
                         <Text
                           as="p"
@@ -624,13 +634,17 @@ export default function HomePage() {
                         >
                           <Img src="images/Alevels.svg" />
                         </Button>
-                        <Heading
+                        <Link to="/alevel_course">
+                          <Heading
                           size="xl"
                           as="h5"
                           className="ml-[5px] tracking-[0.10px] !font-montserrat"
                         >
                           A Levels
                         </Heading>
+
+                        </Link>
+                        
                         <div className="h-0.5 w-[17%] ml-[5px] bg-red-600" />
                         <Text
                           as="p"
@@ -652,6 +666,7 @@ export default function HomePage() {
                         >
                           <Img src="images/SAT.svg" />
                         </Button>
+                        <Link to="/satact_course">
                         <Heading
                           size="xl"
                           as="h5"
@@ -659,6 +674,8 @@ export default function HomePage() {
                         >
                           SAT/ACT
                         </Heading>
+                        </Link>
+                        
                         <div className="h-0.5 w-[17%] ml-[5px] bg-red-600" />
                         <Text
                           as="p"
@@ -679,13 +696,16 @@ export default function HomePage() {
                         >
                           <Img src="images/AI.svg" />
                         </Button>
-                        <Heading
+                        <Link to="/bridge_course">
+                          <Heading
                           size="xl"
                           as="h5"
                           className="ml-[26px] tracking-[0.10px] !font-montserrat"
                         >
-                          AI/ML
+                          BRIDGE COURSE
                         </Heading>
+                        </Link>
+                        
                         <div className="h-0.5 w-[15%] ml-[26px] bg-red-600" />
                         <Text
                           as="p"
