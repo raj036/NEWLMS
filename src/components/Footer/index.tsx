@@ -86,7 +86,7 @@ export default function Footer({ ...props }: Props) {
                 height="400"
               />
             </div>
-            <div className="flex flex-col items-start justify-start w-[70%] md:w-full gap-10">
+            <div className="flex flex-col items-start justify-start w-[90%] md:w-full gap-10">
               <div className="flex flex-row items-start justify-start h-full sm:flex-col">
                 <div className="flex justify-around w-full md:w-6/12 sm:w-full">
                   <div className="flex flex-col items-start justify-start w-3/12 mb-8 sm:w-full">
@@ -99,43 +99,43 @@ export default function Footer({ ...props }: Props) {
                     </Heading>
                     <ul className="flex flex-col items-start justify-start w-full">
                       <li>
-                        <Link to="#">
-                          <Text as="p" className="hover:underline sm:leading-7">
+                        <Link to="/ibdp_course">
+                          <Text as="p" className="hover:underline">
                             IBDP
                           </Text>
                         </Link>
                       </li>
                       <li>
-                        <Link to="#">
-                          <Text as="p" className="hover:underline sm:leading-7">
+                        <Link to="/igcse_course">
+                          <Text as="p" className="hover:underline">
                             IGCSE
                           </Text>
                         </Link>
                       </li>
                       <li>
-                        <Link to="#">
-                          <Text as="p" className="hover:underline sm:leading-7">
+                        <Link to="/myp_course">
+                          <Text as="p" className="hover:underline">
                             MYP
                           </Text>
                         </Link>
                       </li>
                       <li>
-                        <Link to="#">
-                          <Text as="p" className="hover:underline sm:leading-7">
+                        <Link to="/alevel_course">
+                          <Text as="p" className="hover:underline ">
                             A Level
                           </Text>
                         </Link>
                       </li>
                       <li>
-                        <Link to="#">
-                          <Text as="p" className="hover:underline sm:leading-7">
+                        <Link to="/satact_course">
+                          <Text as="p" className="hover:underline">
                             SAT/ACT
                           </Text>
                         </Link>
                       </li>
                       <li>
-                        <Link to="#">
-                          <Text as="p" className="hover:underline sm:leading-7">
+                        <Link to="/bridge_course">
+                          <Text as="p" className="hover:underline">
                             AI/ML
                           </Text>
                         </Link>

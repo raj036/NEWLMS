@@ -380,11 +380,17 @@ const UserProfile = () => {
         <div className=" bg-gray-100 p-6 shadow-lg rounded-lg w-80 ml-8 mt-8 h-[50rem]">
           {/* Profile Photo */}
           <div className="mb-6 flex justify-center">
-            <img
-              src={profilePhotoUrl}
-              alt={`${studentData.first_name}'s profile`}
-              className="w-40 h-40 rounded-full object-cover"
-            />
+           {studentData.profile_photo ? (
+              <img
+                src={studentData.profile_photo}
+                alt={`${studentData.first_name}'s profile pic`}
+                className="w-40 h-40 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-40 h-40 rounded-full bg-indigo-500 text-white flex items-center justify-center text-5xl font-bold">
+                {studentData.first_name?.charAt(0).toUpperCase() || 'User'}
+              </div>
+            )}
           </div>
           {/* Student Name */}
           <h2 className="text-2xl font-bold mb-6 text-center">

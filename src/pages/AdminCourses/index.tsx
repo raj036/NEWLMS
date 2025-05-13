@@ -144,6 +144,7 @@ const Courses = () => {
       // Optionally, reset form or fetch updated course data
       getCourseData();
       setIsDialogue(false);
+      window.location.reload();
     } catch (error) {
       // console.error("Error Creating User", error);
       Swal.fire({

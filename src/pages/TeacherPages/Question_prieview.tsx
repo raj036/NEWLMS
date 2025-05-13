@@ -6,6 +6,10 @@ import Topbar from "components/Topbar";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
+const getFixedImageUrl = (url: string | null) => {
+    if (!url) return null;
+    return url.replace("192.168.29.135:8003", "192.168.29.135:8004");
+};
 const QuestionPreview = () => {
     const [activeTab, setActiveTab] = useState("active");
     const [lessons, setLessons] = useState([]);
@@ -147,19 +151,20 @@ const QuestionPreview = () => {
         }
     };
 
-    const renderOption = (optionText, optionImage, optionLetter) => (
+  const renderOption = (optionText, optionImage, optionLetter) => (
         <div
-            className={`flex items-center p-2 rounded-full mb-2 cursor-pointer ${selectedAnswers[currentIndex] === optionLetter ? 'bg-green-500 text-white' : 'hover:bg-gray-100'}`}
+            className="flex items-center border-b-2 p-2 mb-4 cursor-pointer rounded-md hover:bg-gray-200 "
             onClick={() => handleOptionSelect(optionLetter)}
         >
-            <div className={`w-6 h-6 flex items-center justify-center rounded-full border ${selectedAnswers[currentIndex] === optionLetter ? 'border-white' : 'border-gray-400'} mr-2`}>
+            <div className={`w-6 h-6 flex items-center justify-center rounded-full border mr-2 ${selectedAnswers[currentIndex] === optionLetter ? 'bg-green-500 text-white border-green-500' : 'text-gray-800 border-gray-400'} `}>
                 {optionLetter}
             </div>
-            {optionImage ? (
-                <img src={optionImage} alt={`Option ${optionLetter}`} className="ml-2 h-8 w-8 object-cover" />
-            ) : (
-                <span>{optionText}</span>
-            )}
+              {/* Option Text */}
+    <div className="flex-1 text-gray-800 font-medium">{optionText}</div>
+
+            <img src={getFixedImageUrl(optionImage)} alt="" className="h-28 w-28 object-cover ml-auto rounded shadow-lg" />
+
+
         </div>
     );
 
@@ -203,27 +208,31 @@ const QuestionPreview = () => {
         const currentQuestion = questions[currentIndex];
 
         return (
-            <div className="max-w-4xl mx-auto mt-8 p-4 bg-white rounded-lg shadow-md">
+           <div className="">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold">Lesson: {selectedLesson.lesson_title}</h2>
                     <div className="flex items-center">
                     </div>
                 </div>
 
-                <div className="flex">
-                    <div className="w-3/4 pr-4">
-                        <div className="bg-gray-100 p-4 rounded-lg mb-4">
-                            <p className="font-semibold mb-2">
+                <div className="flex  bg-yellow-20">
+                    <div className=" pr-4 w-[80%] bg-black-90">
+                        <div className="bg-gray-50 p-4 ml-2 rounded-lg mb-4">
+                            <div className="mb-5">
+                            <p className="font-semibold mb-2 ">
                                 {currentIndex + 1}. {currentQuestion.question_text || "Image-based question"}
                             </p>
                             {currentQuestion.question_image && (
-                                <img src={currentQuestion.question_image} alt="Question" className="mb-4 max-w-full h-auto" />
+                                <img src={getFixedImageUrl(currentQuestion.question_image)} alt="Question" className="mb-6 w-[700px] h-[550px] shadow-lg rounded-md" />
+
                             )}
+
 
                             {renderOption(currentQuestion.option1_text, currentQuestion.option1_image, "A")}
                             {renderOption(currentQuestion.option2_text, currentQuestion.option2_image, "B")}
                             {renderOption(currentQuestion.option3_text, currentQuestion.option3_image, "C")}
                             {renderOption(currentQuestion.option4_text, currentQuestion.option4_image, "D")}
+                            </div>
                         </div>
 
                         <div className="flex justify-between mt-4">
@@ -266,7 +275,7 @@ const QuestionPreview = () => {
             </button>
             <div className="flex flex-col min-h-screen">
 
-                <div className="flex-grow p-6 bg-gray-100">
+                <div className="flex-grow p-6">
                     {renderActiveTest()}
                 </div>
             </div>

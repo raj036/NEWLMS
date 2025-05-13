@@ -6,6 +6,23 @@ import Topbar from 'components/Topbar';
 import { Button } from 'components';
 import { Link, useNavigate } from 'react-router-dom';
 
+interface BulkQuestion {
+  question_paper_id: string;
+  question_text: string;
+  question_images?: string | null;
+  option1_text: string;
+  option1_images?: string | null;
+  option2_text: string;
+  option2_images?: string | null;
+  option3_text: string;
+  option3_images?: string | null;
+  option4_text: string;
+  option4_images?: string | null;
+  correct_ans_text: string;
+  correct_ans_images?: string | null;
+  difficulty_level: string;
+  per_question_marks: number;
+}
 const TestPaperCreate = () => {
   const [questionText, setQuestionText] = useState<string>('');
   const [answers, setAnswers] = useState<string[]>(['', '', '', '']); // Default 4 answers
@@ -17,9 +34,12 @@ const TestPaperCreate = () => {
   const [perQuestionMarks, setPerQuestionMarks] = useState<number | null>(null);
   const [questionPaperId, setQuestionPaperId] = useState<string>('');
   const [questionPapers, setQuestionPapers] = useState<any[]>([]); // Store fetched question papers here
-  const { user } :any= useAuthContext(); // Get user context for authorization
-
+const { user }: any = useAuthContext();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [questionsList, setQuestionsList] = useState<any[]>([]);
   // Fetch question papers on component mount
+
   useEffect(() => {
     const fetchQuestionPapers = async () => {
       try {
@@ -36,6 +56,21 @@ const TestPaperCreate = () => {
 
     fetchQuestionPapers();
   }, [user.token]);
+  
+  const uploadFile = async (file: File | null): Promise<string | null> => {
+    if (!file) return null;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post('/api/upload/', formData);
+      return response.data.filePath;
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      return null;
+    }
+  };
 
   const handleAnswerChange = (index: number, value: string) => {
     const updatedAnswers = [...answers];
@@ -49,55 +84,142 @@ const TestPaperCreate = () => {
     setOptionImages(updatedImages);
   };
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+    
+  //   // Basic validation
+  //   // if (!questionText || !questionPaperId || answers.some(answer => !answer) || !correctAnswer) {
+  //   //   alert('Please fill in all required fields.');
+  //   //   return;
+  //   // }
+
+  //   const formData = new FormData();
+    
+  //   formData.append('question_paper_id', questionPaperId); // Selected question paper ID
+  //   formData.append('question_text', questionText);
+    
+  //   if (questionImages) {
+  //     formData.append('question_images', questionImages); // Append question image if available
+  //   }
+    
+  //   answers.forEach((answer, index) => {
+  //     formData.append(`option${index + 1}_text`, answer);
+  //     if (optionImages[index]) {
+  //       formData.append(`option${index + 1}_images`, optionImages[index]);
+  //     }
+  //   });
+
+  //   formData.append('correct_ans_text', correctAnswer);
+  //   if (correctAnswerImage) {
+  //     formData.append('correct_ans_images', correctAnswerImage);
+  //   }
+    
+  //   formData.append('difficulty_level', difficultyLevel);
+  //   formData.append('per_question_marks', perQuestionMarks ? perQuestionMarks.toString() : '0');
+    
+  //   try {
+  //     const response = await axios.post("/api/lesson-test-questions/", formData, {
+  //       headers: {
+  //         Authorization: `Bearer ${user.token}`,
+  //         'Content-Type': 'multipart/form-data',
+  //       },
+  //     });
+  //     Swal.fire({
+  //       title: "Test Created Successfully",
+  //       icon: "success",
+  //       confirmButtonColor: "#7066E0",
+  //       confirmButtonText: "OK",
+  //     });
+       
+  //     // Reset form fields
+  //     resetForm();
+  //   } catch (error) {
+  //     Swal.fire({
+  //       icon: "error",
+  //       title: error?.response?.data?.detail || "Please try again later.",
+  //       showConfirmButton: false,
+  //       timer: 2100,
+  //     });
+  //     console.error('Error creating question:', error);
+     
+  //   }
+  // };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Basic validation
-    // if (!questionText || !questionPaperId || answers.some(answer => !answer) || !correctAnswer) {
-    //   alert('Please fill in all required fields.');
-    //   return;
-    // }
-
-    const formData = new FormData();
-    
-    formData.append('question_paper_id', questionPaperId); // Selected question paper ID
-    formData.append('question_text', questionText);
-    
-    if (questionImages) {
-      formData.append('question_images', questionImages); // Append question image if available
-    }
-    
-    answers.forEach((answer, index) => {
-      formData.append(`option${index + 1}_text`, answer);
-      if (optionImages[index]) {
-        formData.append(`option${index + 1}_images`, optionImages[index]);
+  
+    let updatedQuestions = [...questionsList]; // ✅ Declare here so it's accessible later
+  
+    if (isFormValid()) {
+      const currentQuestion = {
+        questionPaperId,
+        questionText,
+        questionImages,
+        answers: [...answers],
+        optionImages: [...optionImages],
+        correctAnswer,
+        correctAnswerImage,
+        difficultyLevel,
+        perQuestionMarks,
+      };
+  
+      if (currentIndex < updatedQuestions.length) {
+        updatedQuestions[currentIndex] = currentQuestion;
+      } else {
+        updatedQuestions.push(currentQuestion);
       }
-    });
-
-    formData.append('correct_ans_text', correctAnswer);
-    if (correctAnswerImage) {
-      formData.append('correct_ans_images', correctAnswerImage);
+  
+      setQuestionsList(updatedQuestions);
+    } else {
+      return; // Exit early if form is not valid
     }
-    
-    formData.append('difficulty_level', difficultyLevel);
-    formData.append('per_question_marks', perQuestionMarks ? perQuestionMarks.toString() : '0');
-    
+  
+    // ✅ Now you can safely use updatedQuestions here
+    const uploadPromises = updatedQuestions.map(async (q) => {
+      const questionImagePath = await uploadFile(q.questionImages);
+      const optionImagePaths = await Promise.all(
+        q.optionImages.map(file => uploadFile(file))
+      );
+      const correctAnsImagePath = await uploadFile(q.correctAnswerImage);
+  
+      return {
+        question_paper_id: q.questionPaperId,
+        question_text: q.questionText,
+        question_images: questionImagePath,
+        option1_text: q.answers[0],
+        option1_images: optionImagePaths[0],
+        option2_text: q.answers[1],
+        option2_images: optionImagePaths[1],
+        option3_text: q.answers[2],
+        option3_images: optionImagePaths[2],
+        option4_text: q.answers[3],
+        option4_images: optionImagePaths[3],
+        correct_ans_text: q.correctAnswer,
+        correct_ans_images: correctAnsImagePath,
+        difficulty_level: q.difficultyLevel,
+        per_question_marks: q.perQuestionMarks || 0,
+      };
+    });
+  
     try {
-      const response = await axios.post("/api/lesson-test-questions/", formData, {
+      const bulkQuestions = await Promise.all(uploadPromises);
+      const response = await axios.post("/api/lesson-test-questions/", bulkQuestions, {
         headers: {
           Authorization: `Bearer ${user.token}`,
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
         },
       });
+  
       Swal.fire({
         title: "Test Created Successfully",
         icon: "success",
         confirmButtonColor: "#7066E0",
         confirmButtonText: "OK",
       });
-       
-      // Reset form fields
+  
+      setQuestionsList([]);
+      setCurrentIndex(0);
       resetForm();
+      console.log(response);
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -106,7 +228,6 @@ const TestPaperCreate = () => {
         timer: 2100,
       });
       console.error('Error creating question:', error);
-     
     }
   };
 
@@ -121,6 +242,121 @@ const TestPaperCreate = () => {
     setPerQuestionMarks(null);
     setQuestionPaperId('');
   };
+
+  const previousQuestion = () => {
+    // Save the current question data before navigating away
+    const currentQuestionData = {
+      questionPaperId,
+      questionText,
+      questionImages,
+      answers,
+      optionImages,
+      correctAnswer,
+      correctAnswerImage,
+      difficultyLevel,
+      perQuestionMarks,
+    };
+  
+    // Update the current question in the list
+    const updatedQuestions = [...questionsList];
+    if (currentIndex < updatedQuestions.length) {
+      updatedQuestions[currentIndex] = currentQuestionData;
+    } else {
+      updatedQuestions.push(currentQuestionData);
+    }
+    setQuestionsList(updatedQuestions);
+  
+    // Now navigate to previous question
+    if (currentIndex > 0) {
+      const previousData = updatedQuestions[currentIndex - 1];
+      if (previousData) {
+        setQuestionPaperId(previousData.questionPaperId || '');
+        setQuestionText(previousData.questionText || '');
+        setQuestionImages(previousData.questionImages || null);
+        setAnswers(previousData.answers || ['', '', '', '']);
+        setOptionImages(previousData.optionImages || [null, null, null, null]);
+        setCorrectAnswer(previousData.correctAnswer || '');
+        setCorrectAnswerImage(previousData.correctAnswerImage || null);
+        setDifficultyLevel(previousData.difficultyLevel || '');
+        setPerQuestionMarks(previousData.perQuestionMarks || '');
+      }
+      setCurrentIndex((prev) => prev - 1);
+    }
+  };
+
+  const isFormValid = () => {
+    // Check if all required fields are filled
+    return (
+      questionText.trim() !== '' &&
+      answers.every((answer) => answer.trim() !== '') && // All answers should be filled
+      difficultyLevel.trim() !== '' &&
+      perQuestionMarks !== null && perQuestionMarks > 0
+    );
+  };
+
+
+  const nextQuestion = (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    if (!isFormValid()) {
+      return; // Do nothing if the form is not valid
+    }
+    
+    // Save current form data
+    const questionData = {
+      questionPaperId,
+      questionText,
+      questionImages,
+      answers,
+      optionImages,
+      correctAnswer,
+      correctAnswerImage,
+      difficultyLevel,
+      perQuestionMarks,
+    };
+  
+    // Update the questionList
+    const updatedQuestions = [...questionsList];
+    if (currentIndex < updatedQuestions.length) {
+      updatedQuestions[currentIndex] = questionData; // Update the current question
+    } else {
+      updatedQuestions.push(questionData); // If the current index is new, add to the list
+    }
+    setQuestionsList(updatedQuestions);
+    
+    // Check if we need to load an existing next question or create a new one
+    if (currentIndex + 1 < updatedQuestions.length) {
+      // Load the next question's data
+      const nextData = updatedQuestions[currentIndex + 1];
+      setQuestionPaperId(nextData.questionPaperId || '');
+      setQuestionText(nextData.questionText || '');
+      setQuestionImages(nextData.questionImages || null);
+      setAnswers(nextData.answers || ['', '', '', '']);
+      setOptionImages(nextData.optionImages || [null, null, null, null]);
+      setCorrectAnswer(nextData.correctAnswer || '');
+      setCorrectAnswerImage(nextData.correctAnswerImage || null);
+      setDifficultyLevel(nextData.difficultyLevel || '');
+      setPerQuestionMarks(nextData.perQuestionMarks || '');
+    } else {
+      // Reset form for a new question
+      setQuestionText('');
+      setQuestionImages(null);
+      setAnswers(['', '', '', '']);
+      setOptionImages([null, null, null, null]);
+      setCorrectAnswer('');
+      setCorrectAnswerImage(null);
+      setDifficultyLevel('');
+      setPerQuestionMarks(null);
+    }
+    
+    // Move to the next question
+    setCurrentIndex((prev) => prev + 1);
+    console.log(updatedQuestions); // Log after saving data
+  };
+
+  useEffect(() => {
+    console.log('Updated questionsList:', questionsList);
+  }, [questionsList]); 
 
   return (
     <>
@@ -140,6 +376,7 @@ const TestPaperCreate = () => {
             className="w-full p-2 border border-gray-300 rounded-md"
             value={questionPaperId}
             onChange={(e) => setQuestionPaperId(e.target.value)}
+            required
           >
             <option value="">Select a Question Paper</option>
             {questionPapers.map((paper) => (
@@ -158,6 +395,7 @@ const TestPaperCreate = () => {
             placeholder="Enter the question text"
             value={questionText}
             onChange={(e) => setQuestionText(e.target.value)}
+            required
           ></textarea>
         </div>
 
@@ -212,7 +450,15 @@ const TestPaperCreate = () => {
             value={correctAnswer}
             onChange={(e) => setCorrectAnswer(e.target.value)}
             placeholder="Correct answer text"
+            required
           />
+          {correctAnswerImage && (
+              <img
+                src={URL.createObjectURL(correctAnswerImage)}
+                alt="Correct Answer Preview"
+                className="mt-2 max-w-xs border rounded"
+              />
+            )}
         </div>
 
         {/* Upload Correct Answer Image */}
@@ -253,12 +499,33 @@ const TestPaperCreate = () => {
           />
         </div>
 
-        <button
-          type="submit"
-          className="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-        >
-          Create Question
-        </button>
+       <div className='flex gap-4'>
+            <button
+            type='button'
+              className={`bg-gray-400 text-gray-800 px-4 py-2 rounded ${currentIndex === 0 ? 'cursor-not-allowed opacity-50' : ''}`}
+              onClick={previousQuestion}
+              disabled={currentIndex > questionsList.length}
+            >
+              Previous
+            </button>
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+              onClick={nextQuestion}
+              disabled={!isFormValid()}
+            >
+              Next
+            </button>
+
+            <div className='flex w-full justify-end'>
+              <button
+                type="submit"
+                className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              >
+                Create Question
+              </button>
+            </div>
+          </div>
+
       </form>
     </div>
     </>
