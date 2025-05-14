@@ -310,9 +310,10 @@ console.log(response.data)
           },
         }
       );
+      console.log(response.data);
 
       if (response.data.status === "valid") {
-        const discount = (amount * response.data.discount_percentage) / 100;
+        const discount = (response.data.discount_rupees);
         console.log("discount", discount);
         setDiscountAmount(discount);
         setIsReferralValid(true);
@@ -320,7 +321,7 @@ console.log(response.data)
         Swal.fire({
           icon: "success",
           title: "Referral Code Applied",
-          text: `Discount of ${response.data.discount_percentage}% applied!`,
+          text: `Discount of ${response.data.discount_rupees}rs applied!`,
           confirmButtonColor: "#7066E0",
           customClass: {
             icon: "swal-my-icon",
@@ -912,6 +913,9 @@ const generatePaymentSummaryPDF = (paymentID) => {
         razorpay_order_id: paymentData.razorpay_order_id,
         razorpay_payment_id: paymentData.razorpay_payment_id,
         razorpay_signature: paymentData.razorpay_signature,
+         discount: discountAmount,  // Add discount amount
+      final_amount: finalAmount - discountAmount,  // Add final amount after discount
+      referral_code: isReferralValid ? referralCode : null  // Add referral code if valid
 
       };
       console.log(verificationData, 'verify data');
@@ -1545,7 +1549,7 @@ const generatePaymentSummaryPDF = (paymentID) => {
                     </p>
                     {installmentsData.length > 0 && (
                       <div className="pt-3 mt-3 border-t">
-                        <p className="font-semibold">Your payment schedule:</p>
+                        <p className="font-semibold m-4">Your payment schedule:</p>
                         {installmentsData.map((installment, index) => (
                           <div
                             key={installment.installment_number}

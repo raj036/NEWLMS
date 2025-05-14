@@ -7,22 +7,22 @@ interface ReferralCode {
   code: string;
   created_by: number;
   created_on: string;
-  expiry_days: number;
-  discount_percentage: number;
+  discount_rupees: number;
   status: string;
 }
 
 interface ReferralCodeCreate {
   code: string;
-  expiry_days?: number;
-  discount_percentage?: number;
+  discount_rupees?: number;
+  is_enabled: boolean; // Add the missing parameter
 }
 
 const ReferralCodeForm: React.FC = () => {
+
   const [referralCode, setReferralCode] = useState<ReferralCodeCreate>({
     code: "",
-    expiry_days: 2,
-    discount_percentage: 10,
+    discount_rupees: null,
+    is_enabled: true, // Initialize with a default value
   });
 
   const [referralList, setReferralList] = useState<ReferralCode[]>([]);
@@ -48,6 +48,10 @@ const ReferralCodeForm: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setReferralCode({ ...referralCode, [e.target.name]: e.target.value });
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setReferralCode({ ...referralCode, [e.target.name]: e.target.checked });
   };
 
   const handleCopyCode = (code: string) => {
@@ -95,38 +99,98 @@ const ReferralCodeForm: React.FC = () => {
     toggleShareTooltip(code);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     setLoading(true);
+//     setMessage("");
+//     console.log(referralCode);
 
-    try {
-      const response = await axios.post(
-        `api/referral-codes_create/`,
-        referralCode,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
-      );
+//     try {
+//          const response = await axios.post(
+//       `api/referral-codes_create/?code=${encodeURIComponent(referralCode.code)}&discount_rupees=${referralCode.discount_rupees}&is_enabled=${referralCode.is_enabled}`,
+//       {}, // Empty body
+//       {
+//         headers: {
+//           Authorization: `Bearer ${user.token}`,
+//         },
+//       }
+//     );
+//       console.log(response);
+//       setMessage(response.data.message || "Referral code created successfully");
+//       setMessageType("success");
+//       setReferralCode({ code: "", discount_rupees: 10, is_enabled: true }); // Reset form with defaults
+//       fetchReferralCodes();
+//     } catch (error: any) {
+//   console.log(error);
+//   let errorMessage = "Something went wrong.";
+  
+//   if (error.response) {
+//     // Handle different error response formats
+//     if (typeof error.response.data === 'string') {
+//       errorMessage = error.response.data;
+//     } else if (error.response.data.detail) {
+//       errorMessage = error.response.data.detail;
+//     } else if (error.response.data.message) {
+//       errorMessage = error.response.data.message;
+//     } else if (error.response.data.code) {
+//       // Handle validation errors
+//       errorMessage = `Validation error: ${error.response.data.code.join(', ')}`;
+//     }
+//   } else if (error.message) {
+//     errorMessage = error.message;
+//   }
+  
+//   setMessage(errorMessage);
+//   setMessageType("error");
+// }
+//   };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setMessage("");
+  console.log(referralCode);
 
-      setMessage(response.data.message);
-      setMessageType("success");
-      setReferralCode({ code: "", expiry_days: 2, discount_percentage: 10 });
-      fetchReferralCodes();
-    } catch (error: any) {
-      if (error.response) {
-        setMessage(error.response.data.detail || "Failed to create referral code");
-      } else {
-        setMessage("Something went wrong.");
+  try {
+    const response = await axios.post(
+      `api/referral-codes_create/?code=${encodeURIComponent(referralCode.code)}&discount_rupees=${referralCode.discount_rupees}&is_enabled=${referralCode.is_enabled}`,
+      {}, // Empty body
+      {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          'Content-Type': 'application/json', // Add this header
+          'accept': 'application/json' // Add this header
+        },
       }
-      setMessageType("error");
-    } finally {
-      setLoading(false);
+    );
+    
+    console.log(response);
+    setMessage(response.data.message || "Referral code created successfully");
+    setMessageType("success");
+    setReferralCode({ code: "", discount_rupees: 0, is_enabled: true });
+    fetchReferralCodes();
+  } catch (error: any) {
+    console.error("Error creating referral code:", error);
+    let errorMessage = "Something went wrong.";
+    
+    if (error.response) {
+      // Handle different error response formats
+      if (error.response.data.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (typeof error.response.data === 'string') {
+        errorMessage = error.response.data;
+      }
+    } else if (error.message) {
+      errorMessage = error.message;
     }
-  };
-
+    
+    setMessage(errorMessage);
+    setMessageType("error");
+  } finally {
+    setLoading(false); // This will stop the loader in all cases
+  }
+};
   useEffect(() => {
     fetchReferralCodes();
   }, []);
@@ -163,29 +227,32 @@ const ReferralCodeForm: React.FC = () => {
               </div>
 
               <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">Expiry (Days)</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Amount (₹)</label>
                 <input
                   type="number"
-                  name="expiry_days"
-                  value={referralCode.expiry_days}
+                  placeholder="Enter a amount"
+                  name="discount_rupees"
+                  value={referralCode.discount_rupees}
                   onChange={handleChange}
                   min="1"
-                  max="365"
+                  required
+                  // max="100"
                   className="w-full px-4 py-2 transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">Discount (%)</label>
+              <div className="flex items-center mt-6">
                 <input
-                  type="number"
-                  name="discount_percentage"
-                  value={referralCode.discount_percentage}
-                  onChange={handleChange}
-                  min="1"
-                  max="100"
-                  className="w-full px-4 py-2 transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  type="checkbox"
+                  id="is_enabled"
+                  name="is_enabled"
+                  checked={referralCode.is_enabled}
+                  onChange={handleCheckboxChange}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
+                <label htmlFor="is_enabled" className="block ml-2 text-sm font-medium text-gray-700">
+                  Enable this referral code
+                </label>
               </div>
             </div>
 
@@ -245,7 +312,6 @@ const ReferralCodeForm: React.FC = () => {
                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Code</th>
                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Status</th>
                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Created On</th>
-                  <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Expiry</th>
                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Discount</th>
                   <th className="px-4 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Actions</th>
                 </tr>
@@ -253,7 +319,7 @@ const ReferralCodeForm: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {referralList.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-4 text-sm text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-4 text-sm text-center text-gray-500">
                       <div className="flex flex-col items-center justify-center py-6">
                         <svg className="w-12 h-12 mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
@@ -277,11 +343,8 @@ const ReferralCodeForm: React.FC = () => {
                       <td className="px-4 py-3 text-sm text-gray-500">
                         {new Date(code.created_on).toLocaleString("en-IN")}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
-                        {code.expiry_days} days
-                      </td>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                        {code.discount_percentage}%
+                        {code.discount_rupees}₹
                       </td>
                       <td className="flex px-4 py-3 space-x-2 text-sm text-gray-500">
                         <button 
