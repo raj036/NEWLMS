@@ -136,7 +136,7 @@ export default function Footer({ ...props }: Props) {
                       <li>
                         <Link to="/bridge_course">
                           <Text as="p" className="hover:underline">
-                            AI/ML
+                            Bridge Course
                           </Text>
                         </Link>
                       </li>
